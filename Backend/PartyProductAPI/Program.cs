@@ -48,19 +48,17 @@
 global using PartyProductAPI.Models;
 var builder = WebApplication.CreateBuilder(args);
 
-// Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<PartyProductApiContext>();
 builder.Services.AddAutoMapper(typeof(Program));
 
-// Fix the typo here: change builder.services to builder.Services
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(builder =>
     {
-        builder.WithOrigins("http://127.0.0.1:5500") // Add your frontend URL here
+        builder.WithOrigins("http://127.0.0.1:5500/") 
                .AllowAnyHeader()
                .AllowAnyMethod();
     });
@@ -68,7 +66,6 @@ builder.Services.AddCors(options =>
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
