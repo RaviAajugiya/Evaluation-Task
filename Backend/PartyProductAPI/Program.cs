@@ -45,8 +45,13 @@
 
 
 
+
+
+
 global using PartyProductAPI.Models;
+using System.Text.Json.Serialization;
 var builder = WebApplication.CreateBuilder(args);
+var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
@@ -54,15 +59,23 @@ builder.Services.AddSwaggerGen();
 builder.Services.AddDbContext<PartyProductApiContext>();
 builder.Services.AddAutoMapper(typeof(Program));
 
+//builder.Services.AddControllers().AddJsonOptions(options =>
+//{
+//    options.JsonSerializerOptions.ReferenceHandler = ReferenceHandler.Preserve;
+//});
+
 builder.Services.AddCors(options =>
 {
-    options.AddDefaultPolicy(builder =>
-    {
-        builder.WithOrigins("http://127.0.0.1:5500/") 
-               .AllowAnyHeader()
-               .AllowAnyMethod();
-    });
+    options.AddPolicy(name: MyAllowSpecificOrigins,
+                      policy =>
+                      {
+                          policy.WithOrigins("http://127.0.0.1:5500",
+                                              "http://127.0.0.1:5501")
+                                                    .AllowAnyHeader()
+                                                  .AllowAnyMethod();
+                      });
 });
+
 
 var app = builder.Build();
 
@@ -72,8 +85,9 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-app.UseHttpsRedirection();
 
+app.UseHttpsRedirection();
+app.UseCors(MyAllowSpecificOrigins);
 app.UseAuthorization();
 
 app.MapControllers();

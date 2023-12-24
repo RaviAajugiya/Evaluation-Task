@@ -66,50 +66,72 @@
         </div>
     </nav>
 
-    <div class="container table-container">   
+    <div class="container table-container"> 
+        <h2 class="text-center">Add Invoice</h2>
+        <div class="row">
+            <div class="col-md-4">
+                <form id="invoiceForm">
+                    <div class="mb-3">
+                        <label for="partyDropdown" class="form-label">Party</label>
+                        <select class="form-select" id="partyDropdown" name="partyId" required>
+                        </select>
+                    </div>
+                    <div id="productFields">
+                        <div class="product-field">
+                            <div class="mb-3">
+                                <label for="productDropdown" class="form-label">Product</label>
+                                <select class="form-select product-select" id="productDropdown" name="productId" required>
+                                </select>
+                            </div>
+                            <div class="mb-3">
+                                <label for="productRate" class="form-label">Rate</label>
+                                <input type="number" class="form-control rate-input" id="productRate" name="productRate" required>
+                            </div>
+                            <div class="mb-3">
+                                <label for="quantity" class="form-label">Quantity</label>
+                                <input type="number" class="form-control rate-input" id="quantity" name="quantity" required>
+                            </div>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn btn-secondary" id="addProductBtn">Add Product</button>
+                </form>
+            </div>
+        
+            <div class="col-md-8">
+                <div class="table-container">
+                    <h2 id="partyName"></h2>
+                    <table id="invoiceTable" class="table table-striped table-bordered" style="width:100%">
 
-        <div class="my-4">
-            <h2>Add New Invoice</h2>
-            <form id="invoiceForm">
-                <div class="mb-3">
-                    <label for="partyDropdown" class="form-label">Party</label>
-                    <select class="form-select" id="partyDropdown" name="partyId" required>
-                    </select>
+                    </table>
+                    <div>Grand Total: <span id="grandTotal">0.00</span> </div>
                 </div>
-                <div class="mb-3">
-                    <label for="productDropdown" class="form-label">Product</label>
-                    <select class="form-select" id="productDropdown" name="productId" required>
-                    </select>
-                </div>
-                <div class="mb-3">
-                    <label for="rate" class="form-label">Rate</label>
-                    <input type="number" class="form-control" id="rate" name="rate" required>
-                </div>
-                <div class="mb-3">
-                    <label for="quantity" class="form-label">Quantity</label>
-                    <input type="number" class="form-control" id="quantity" name="quantity" required>
-                </div>
-                <button type="submit" class="btn btn-primary">Add Invoice</button>
-            </form>
+                <button id="GenerateInvoice" class="btn btn-danger mt-4">Generate Invoice</button>
+        
+            </div>            
         </div>
 
-        <table id="invoice" class="table table-striped table-bordered" style="width:100%">
 
-        </table>
+        <div class="container table-container">
+            <h2 class="my-4 text-center">Invoice History</h2>
+            <table id="invoiceHistory" class="table table-striped table-bordered" style="width:100%">
+                
+            </table>
+        </div>
+
+
+
     </div>
 
     <script src="https://code.jquery.com/jquery-3.7.0.js"></script>
 
     <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/dataTables.buttons.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/pdfmake.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdfmake/0.1.53/vfs_fonts.js"></script>
-    <script src="https://cdn.datatables.net/buttons/2.4.2/js/buttons.html5.min.js"></script>
 
 
     <script src="https://cdn.datatables.net/1.13.7/js/dataTables.bootstrap5.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
     <script src="js/invoice.js"></script>
+
+    
 
 
 </body>

@@ -8,6 +8,6 @@
 
         public decimal Rate { get; set; }
 
-        public DateOnly RateDate { get; set; }
+        public DateTime RateDate { get; set; } = DateTime.Now;
     }
 }

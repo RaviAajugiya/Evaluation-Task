@@ -48,9 +48,6 @@ function deleteproductRate(productRateId) {
                     console.error('Failed to delete party:', response.statusText);
                 }
             })
-            .catch(error => {
-                console.error('Error deleting party:', error);
-            });
     }
 }
 

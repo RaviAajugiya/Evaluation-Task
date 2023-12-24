@@ -63,8 +63,6 @@ namespace PartyProductAPI.Controllers
                 }
                 return StatusCode(500, "Internal Server Error: " + ex.Message);
             }
-
-
         }
 
         [HttpPut("{Id}")]

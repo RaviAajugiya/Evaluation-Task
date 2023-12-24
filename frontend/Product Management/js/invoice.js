@@ -1,81 +1,157 @@
-// invoice.js
-
-let invoiceData;
-
-const loadData = async (url) => {
-    const res = await fetch(url);
-    invoiceData = await res.json();
-    console.log(invoiceData);
-    $('#invoice').DataTable({
-        data: invoiceData,
-        columns: [
-            { data: 'invoiceId', title: 'Invoice ID' },
-            { data: 'partyName', title: 'Party Name' },
-            { data: 'productName', title: 'Product Name' },
-            { data: 'date', title: 'Date' },
-            { data: 'quantity', title: 'Quantity' },
-            { data: 'rate', title: 'Rate' },
-            { data: 'total', title: 'Total' },
-            { data: 'date', title: 'Date' },
-            // {
-            //     title: 'Actions',
-            //     render: function (data, type, row) {
-            //         return `
-            //             <button class="btn btn-warning btn-sm" onclick="editinvoice(${row.invoiceId})">
-            //                 <i class="bi bi-pencil-fill"></i> Edit
-            //             </button>
-            //             <button class="btn btn-danger btn-sm ms-2" onclick="deleteinvoice(${row.invoiceId})">
-            //                 <i class="bi bi-trash-fill"></i> Delete
-            //             </button>
-            //         `;
-            //     }
-            // }
-        ],
-        dom: 'Bfrtip',
-        buttons: ['pdf']
-    });
-};
-
-loadData('https://localhost:44309/api/invoice');
 
 $(document).ready(function () {
-    // Fetch party data and populate the dropdown
-    fetch('https://localhost:44309/api/party')
-        .then(response => response.json())
-        .then(data => {
-            data.forEach(party => {
-                $('#partyDropdown').append(`<option value="${party.partyId}">${party.partyName}</option>`);
-            });
-        })
-        .catch(error => console.error('Error fetching party data:', error));
+    let formData = {
+        products: []
+    };
 
-    fetch('https://localhost:44309/api/product')
-        .then(response => response.json())
-        .then(data => {
-            data.forEach(product => {
-                $('#productDropdown').append(`<option value="${product.productId}">${product.productName}</option>`);
-            });
-        })
-        .catch(error => console.error('Error fetching product data:', error));
+    function updateDataTable() {
+        $('#invoiceTable').DataTable().clear().rows.add(formData.products).draw();
+
+        const grandTotal = formData.products.reduce((total, item) => {
+            return total + (item.quantity * item.rate);
+        }, 0);
+
+        $('#grandTotal').text(grandTotal.toFixed(2));
+    }
 
     $('#invoiceForm').submit(function (e) {
         e.preventDefault();
 
-        const formData = {
-            partyId: $('#partyDropdown').val(),
+        $('#partyDropdown').prop('disabled', true);
+        formData.partyId = $('#partyDropdown').val();
+        formData.products.push({
             productId: $('#productDropdown').val(),
-            rate: parseFloat($('#rate').val()),
-            quantity: parseInt($('#quantity').val())
-        };
+            productName: $('#productDropdown option:selected').text(),
+            quantity: parseFloat($('#quantity').val()),
+            rate: parseFloat($('#productRate').val()),
+            total: parseFloat($('#quantity').val()) * parseFloat($('#productRate').val())
+        });
+
+
+        $('#partyName').text($('#partyDropdown option:selected').text());
+        updateDataTable();
+        // console.log(formData);
+    });
+
+    $('#invoiceTable').DataTable({
+        data: formData.products,
+        columns: [
+            { data: 'productName', title: 'Product Name' },
+            { data: 'quantity', title: 'Quantity' },
+            { data: 'rate', title: 'Rate' },
+            { data: 'total', title: 'total' },
+        ]
+    });
+
+    $('#GenerateInvoice').click(function () {
+        console.log(formData);
 
         $.ajax({
-            url: 'https://localhost:44309/api/invoice/',
+            url: 'https://localhost:44309/api/Invoice',
             type: 'POST',
             contentType: 'application/json',
             data: JSON.stringify(formData),
             success: function (data) {
                 location.reload();
             },
+            error: function (error) {
+                console.log(error);
+            }
         });
+
     });
+
+
+    fetch('https://localhost:44309/api/invoice')
+        .then(response => response.json())
+        .then(data => {
+            console.log('dt', data);
+            $('#invoiceHistory').DataTable({
+                data: data,
+                columns: [
+                    { data: 'id', title: 'id' },
+                    { data: 'partyId', title: 'partyId' },
+                    { data: 'partyName', title: 'partyName' },
+                    { data: 'date', title: 'date' },
+                    {
+                        title: 'Actions',
+                        render: function (data, type, row) {
+                            return '<button class="view-btn" data-id="' + row.id + '">View Invoice</button>';
+                        }
+                    }
+                ]
+            });
+        });
+
+
+    $('#invoiceHistory').on('click', '.view-btn', function () {
+        var invoiceId = $(this).data('id');
+
+        window.location.href = 'viewInvoice.html?id=' + invoiceId;
+    });
+
+
+    fetch('https://localhost:44309/api/AssignParty')
+        .then(response => response.json())
+        .then(data => {
+            const uniqueParties = new Set();
+            data.forEach(party => {
+                if (!uniqueParties.has(party.partyId)) {
+                    uniqueParties.add(party.partyId);
+                    $('#partyDropdown').append(`<option value="${party.partyId}">${party.partyName}</option>`);
+                }
+            });
+            loadInvoiceProducts();
+
+        })
+        .catch(error => console.error('Error fetching party data:', error));
+
+    function fetchInvoiceProductRate(productId) {
+        fetch(`https://localhost:44309/api/invoice/InvoiceProductRate/${productId}`)
+            .then(response => response.json())
+            .then(data => {
+                $('#productRate').val(data);
+            });
+    }
+
+    function loadInvoiceProductRate() {
+        let productId = $('#productDropdown').val();
+        fetchInvoiceProductRate(productId);
+    }
+
+
+    $('#productDropdown').change(function () {
+        $('#productRate').empty();
+        let productId = $('#productDropdown').val();
+        fetchInvoiceProductRate(productId);
+
+    });
+
+
+
+
+
+    function loadInvoiceProducts() {
+        let partyId = $('#partyDropdown').val();
+        fetchInvoiceProducts(partyId);
+    }
+
+    $('#partyDropdown').change(function () {
+        $('#productDropdown').empty();
+        let partyId = $('#partyDropdown').val();
+        fetchInvoiceProducts(partyId);
+    });
+
+    function fetchInvoiceProducts(partyId) {
+        fetch(`https://localhost:44309/api/invoice/InvoiceProducts/${partyId}`)
+            .then(response => response.json())
+            .then(data => {
+                $('#productDropdown').empty();
+                data.forEach(product => {
+                    $('#productDropdown').append(`<option value="${product.productId}">${product.productName}</option>`);
+                });
+                loadInvoiceProductRate();
+            });
+    }
+
 });

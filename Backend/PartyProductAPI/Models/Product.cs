@@ -11,7 +11,7 @@ public partial class Product
 
     public virtual ICollection<AssignParty> AssignParties { get; set; } = new List<AssignParty>();
 
-    public virtual ICollection<Invoice> Invoices { get; set; } = new List<Invoice>();
+    public virtual ICollection<InvoiceItem> InvoiceItems { get; set; } = new List<InvoiceItem>();
 
     public virtual ICollection<ProductRate> ProductRates { get; set; } = new List<ProductRate>();
 }
