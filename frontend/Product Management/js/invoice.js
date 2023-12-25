@@ -1,3 +1,9 @@
+const token = localStorage.getItem('token');
+const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+};
+
 
 $(document).ready(function () {
     let formData = {
@@ -30,8 +36,39 @@ $(document).ready(function () {
 
         $('#partyName').text($('#partyDropdown option:selected').text());
         updateDataTable();
-        // console.log(formData);
     });
+
+
+    $('#searchButton').click(function (e) {
+        e.preventDefault();
+    
+        const party = $('#party').val();
+        const product = $('#product').val();
+        const invoiceNo = $('#invoiceNo').val();
+        const startDate = $('#startDate').val();
+        const endDate = $('#endDate').val();
+    
+        const queryParams = new URLSearchParams({
+            party,
+            product,
+            invoiceNo,
+            startDate,
+            endDate
+        });
+    
+        const apiUrl = `https://localhost:44309/api/invoice/GetInvoiceHistory?${queryParams}`;
+    
+        fetch(apiUrl, {headers:headers})
+            .then(response => response.json())
+            .then(data => {
+                console.log(data);
+                $('#invoiceHistory').DataTable().clear().rows.add(data).draw();
+            })
+            .catch(error => console.error('Error fetching invoice history:', error));
+    });
+  
+    
+
 
     $('#invoiceTable').DataTable({
         data: formData.products,
@@ -49,7 +86,7 @@ $(document).ready(function () {
         $.ajax({
             url: 'https://localhost:44309/api/Invoice',
             type: 'POST',
-            contentType: 'application/json',
+            headers: headers,
             data: JSON.stringify(formData),
             success: function (data) {
                 location.reload();
@@ -62,7 +99,7 @@ $(document).ready(function () {
     });
 
 
-    fetch('https://localhost:44309/api/invoice')
+    fetch('https://localhost:44309/api/invoice', {headers: headers})
         .then(response => response.json())
         .then(data => {
             console.log('dt', data);
@@ -91,7 +128,7 @@ $(document).ready(function () {
     });
 
 
-    fetch('https://localhost:44309/api/AssignParty')
+    fetch('https://localhost:44309/api/AssignParty', {headers: headers})
         .then(response => response.json())
         .then(data => {
             const uniqueParties = new Set();
@@ -107,7 +144,7 @@ $(document).ready(function () {
         .catch(error => console.error('Error fetching party data:', error));
 
     function fetchInvoiceProductRate(productId) {
-        fetch(`https://localhost:44309/api/invoice/InvoiceProductRate/${productId}`)
+        fetch(`https://localhost:44309/api/invoice/InvoiceProductRate/${productId}`, {headers: headers})
             .then(response => response.json())
             .then(data => {
                 $('#productRate').val(data);
@@ -143,7 +180,7 @@ $(document).ready(function () {
     });
 
     function fetchInvoiceProducts(partyId) {
-        fetch(`https://localhost:44309/api/invoice/InvoiceProducts/${partyId}`)
+        fetch(`https://localhost:44309/api/invoice/InvoiceProducts/${partyId}`, {headers: headers})
             .then(response => response.json())
             .then(data => {
                 $('#productDropdown').empty();

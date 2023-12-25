@@ -1,7 +1,12 @@
 let productRateData;
+const token = localStorage.getItem('token');
+const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+};
 
 const loadData = async (url) => {
-    const res = await fetch(url);
+    const res = await fetch(url, {headers: headers});
     productRateData = await res.json();
     console.log(productRateData);
     $('#productRateTable').DataTable({
@@ -33,13 +38,15 @@ loadData('https://localhost:44309/api/ProductRate');
 
 
 async function editproductRate(productRateId) {
-        location.href = `/productRateAdd.html?productRateId=${productRateId}`;
+    location.href = `/productRateAdd.html?productRateId=${productRateId}`;
 }
 
 function deleteproductRate(productRateId) {
     if (confirm('Are you sure you want to delete this product Rate?')) {
         fetch(`https://localhost:44309/api/ProductRate/${productRateId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: headers
+
         })
             .then(response => {
                 if (response.ok) {
@@ -55,7 +62,7 @@ function deleteproductRate(productRateId) {
 $(document).ready(function () {
 
     const populateDropdown = async (url, dropdownId, valueField, textField) => {
-        const res = await fetch(url);
+        const res = await fetch(url, {headers: headers});
         const data = await res.json();
 
         const dropdown = $(`#${dropdownId}`);
@@ -75,6 +82,7 @@ $(document).ready(function () {
         $.ajax({
             url: `https://localhost:44309/api/ProductRate/${productRateId}`,
             type: 'GET',
+            headers: headers,
             success: function (data) {
                 console.log('rate data', data);
                 $('#productName').val(data.productId).change();
@@ -90,7 +98,7 @@ $(document).ready(function () {
     console.log(productRateId);
 
     $('#productRateForm').submit(function (event) {
-        event.preventDefault(); 
+        event.preventDefault();
         var productName = $('#productName').val();
         var rate = $('#productRate').val();
         var rateDate = $('#RateDate').val();
@@ -108,6 +116,7 @@ $(document).ready(function () {
             url: url,
             type: requestType,
             contentType: 'application/json',
+            headers: headers,
             data: JSON.stringify(productRateData),
             success: function (data) {
                 console.log(`productRate ${productRateId ? 'updated' : 'added'} successfully:`, data);
@@ -117,7 +126,7 @@ $(document).ready(function () {
             }
         });
 
-        location.href = `/productRate.html`; 
+        location.href = `/productRate.html`;
 
     });
 });

@@ -1,7 +1,12 @@
 let productData;
+const token = localStorage.getItem('token');
+const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+};
 
 const loadData = async (url) => {
-    const res = await fetch(url);
+    const res = await fetch(url, {headers: headers});
     productData = await res.json();
     $('#productTable').DataTable({
         data: productData,
@@ -31,14 +36,13 @@ async function editproduct(productId) {
 }
 
 function deleteproduct(productId) {
-    // Call the API to delete the product
     if (confirm('Are you sure you want to delete this product?')) {
         fetch(`https://localhost:44309/api/product/${productId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: headers,
         })
             .then(response => {
                 if (response.ok) {
-                    // Remove the deleted product from the DataTable
                     const index = productData.findIndex(product => product.productId === productId);
                     if (index !== -1) {
                         productData.splice(index, 1);
@@ -58,7 +62,6 @@ loadData('https://localhost:44309/api/product');
 
 
 
-// product add
 $(document).ready(function () {
     const urlParams = new URLSearchParams(window.location.search);
     const productId = urlParams.get('productId');
@@ -67,6 +70,7 @@ $(document).ready(function () {
         $.ajax({
             url: `https://localhost:44309/api/product/${productId}`,
             type: 'GET',
+            headers: headers,
             success: function (data) {
                 $('#productName').val(data.productName);
             },
@@ -92,6 +96,7 @@ $(document).ready(function () {
             type: requestType,
             contentType: 'application/json',
             data: JSON.stringify(productData),
+            headers: headers,
             success: function (data) {
                 console.log(`product ${productId ? 'updated' : 'added'} successfully:`, data);
             },

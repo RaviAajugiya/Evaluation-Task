@@ -1,11 +1,21 @@
 
 let editData;
+const token = localStorage.getItem('token');
+const headers = {
+  'Content-Type': 'application/json',
+  'Authorization': `Bearer ${token}`
+};
 
 $(document).ready(function () {
   const urlParams = new URLSearchParams(window.location.search);
   const invoiceId = urlParams.get('id');
 
-  fetch(`https://localhost:44309/api/invoice/${invoiceId}`)
+
+  fetch(`https://localhost:44309/api/invoice/${invoiceId}`,
+    {
+      method: 'GET',
+      headers: headers
+    })
     .then(response => response.json())
     .then(data => {
       editData = data;
@@ -36,7 +46,7 @@ $(document).ready(function () {
                     <td>${grandTotal}</td>
                 </tr>
             `);
-     
+
 
       $('#invoiceForm').submit(function (e) {
         e.preventDefault();
@@ -91,12 +101,10 @@ $(document).ready(function () {
     editData.products.splice(index, 1);
     updateDataTable();
 
-    // Set the values in the form
     $('#quantity').val(rowData.quantity);
     $('#productRate').val(rowData.rate);
 
-    // Select the product name in the dropdown
-    var productNameToSelect = rowData.productName; // Name of the product to select
+    var productNameToSelect = rowData.productName; 
     $('#productDropdown option').each(function () {
       if ($(this).text() === productNameToSelect) {
         $(this).prop('selected', true);
@@ -121,10 +129,16 @@ $(document).ready(function () {
     $.ajax({
       url: `https://localhost:44309/api/Invoice/${editData.id}`,
       type: 'DELETE',
+      headers: {
+        'Authorization': 'Bearer ' + localStorage.getItem('token')
+      },
       success: function () {
         $.ajax({
           url: 'https://localhost:44309/api/Invoice',
           type: 'POST',
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          },
           contentType: 'application/json',
           data: JSON.stringify(editData),
           success: function (data) {
@@ -147,8 +161,12 @@ $(document).ready(function () {
 
 $("#PrintInvoice").click(function (e) {
   e.preventDefault();
-  editInvoice();
+  printInvoice();
 });
+
+function printInvoice(){
+  window.print();
+}
 
 $("#EditInvoice").click(function (e) {
   e.preventDefault();
@@ -160,7 +178,11 @@ function editInvoice() {
   $('#editModel').show();
   $('#overlay').show();
 
-  fetch('https://localhost:44309/api/AssignParty')
+  fetch('https://localhost:44309/api/AssignParty',
+    {
+      method: 'GET',
+      headers: headers
+    })
     .then(response => response.json())
     .then(data => {
       const uniqueParties = new Set();
@@ -178,7 +200,11 @@ function editInvoice() {
     .catch(error => console.error('Error fetching party data:', error));
 
   function fetchInvoiceProductRate(productId) {
-    fetch(`https://localhost:44309/api/invoice/InvoiceProductRate/${productId}`)
+    fetch(`https://localhost:44309/api/invoice/InvoiceProductRate/${productId}`,
+      {
+        method: 'GET',
+        headers: headers
+      })
       .then(response => response.json())
       .then(data => {
         $('#productRate').val(data);
@@ -212,7 +238,11 @@ function editInvoice() {
   });
 
   function fetchInvoiceProducts(partyId) {
-    fetch(`https://localhost:44309/api/invoice/InvoiceProducts/${partyId}`)
+    fetch(`https://localhost:44309/api/invoice/InvoiceProducts/${partyId}`,
+    {
+      method: 'GET',
+      headers: headers
+    })
       .then(response => response.json())
       .then(data => {
         $('#productDropdown').empty();

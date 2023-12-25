@@ -27,6 +27,8 @@ public partial class PartyProductApiContext : DbContext
 
     public virtual DbSet<ProductRate> ProductRates { get; set; }
 
+    public virtual DbSet<User> Users { get; set; }
+
     protected override void OnConfiguring(DbContextOptionsBuilder optionsBuilder)
 #warning To protect potentially sensitive information in your connection string, you should move it out of source code. You can avoid scaffolding the connection string by using the Name= syntax to read it from configuration - see https://go.microsoft.com/fwlink/?linkid=2131148. For more guidance on storing connection strings, see https://go.microsoft.com/fwlink/?LinkId=723263.
         => optionsBuilder.UseSqlServer("Data Source=.; Initial Catalog=PartyProductAPI;Trusted_Connection=True;MultipleActiveResultSets=true;TrustServerCertificate=True");
@@ -130,6 +132,14 @@ public partial class PartyProductApiContext : DbContext
             entity.HasOne(d => d.Product).WithMany(p => p.ProductRates)
                 .HasForeignKey(d => d.ProductId)
                 .HasConstraintName("FK_Product_Rate_Product1");
+        });
+
+        modelBuilder.Entity<User>(entity =>
+        {
+            entity.HasKey(e => e.Id).HasName("PK__Users__3214EC07AFFB8C46");
+
+            entity.Property(e => e.Password).HasMaxLength(100);
+            entity.Property(e => e.Username).HasMaxLength(50);
         });
 
         OnModelCreatingPartial(modelBuilder);

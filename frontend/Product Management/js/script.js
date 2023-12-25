@@ -1,7 +1,17 @@
 let PartyData;
+const token = localStorage.getItem('token');
+const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+};
 
 const loadData = async (url) => {
-    const res = await fetch(url);
+
+    const options = {
+        method: 'GET',
+        headers: headers,
+    };
+    const res = await fetch(url, options);
     PartyData = await res.json();
     $('#example').DataTable({
         data: PartyData,
@@ -31,14 +41,13 @@ async function editParty(partyId) {
 }
 
 function deleteParty(partyId) {
-    // Call the API to delete the party
     if (confirm('Are you sure you want to delete this party?')) {
         fetch(`https://localhost:44309/api/party/${partyId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers : headers
         })
             .then(response => {
                 if (response.ok) {
-                    // Remove the deleted party from the DataTable
                     const index = PartyData.findIndex(party => party.partyId === partyId);
                     if (index !== -1) {
                         PartyData.splice(index, 1);
@@ -58,7 +67,6 @@ loadData('https://localhost:44309/api/party');
 
 
 
-// party add
 $(document).ready(function () {
     const urlParams = new URLSearchParams(window.location.search);
     const partyId = urlParams.get('partyId');
@@ -67,6 +75,9 @@ $(document).ready(function () {
         $.ajax({
             url: `https://localhost:44309/api/party/${partyId}`,
             type: 'GET',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            },
             success: function (data) {
                 $('#partyName').val(data.partyName);
             },
@@ -91,6 +102,9 @@ $(document).ready(function () {
             url: url,
             type: requestType,
             contentType: 'application/json',
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            },
             data: JSON.stringify(partyData),
             success: function (data) {
                 console.log(`Party ${partyId ? 'updated' : 'added'} successfully:`, data);

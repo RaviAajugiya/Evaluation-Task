@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
@@ -6,6 +7,7 @@ using PartyProductAPI.DTOs;
 
 namespace PartyProductAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class PartyController : ControllerBase
@@ -64,6 +66,7 @@ namespace PartyProductAPI.Controllers
                 return StatusCode(500, "Internal Server Error: " + ex.Message);
             }
         }
+
 
         [HttpPut("{Id}")]
         public async Task<ActionResult> Put(int Id, [FromBody] PartyCreateDTO partyCreate)

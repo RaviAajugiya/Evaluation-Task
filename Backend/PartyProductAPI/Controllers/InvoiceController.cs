@@ -1,4 +1,5 @@
 ﻿using AutoMapper;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
@@ -7,6 +8,7 @@ using PartyProductAPI.DTOs;
 
 namespace PartyProductAPI.Controllers
 {
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class InvoiceController : ControllerBase
@@ -22,9 +24,9 @@ namespace PartyProductAPI.Controllers
             this.mapper = new MapperConfiguration(cfg =>
             {
                 cfg.CreateMap<Invoice, InvoiceDTO>()
-                    .ForMember(dest => dest.PartyName, opt => opt.MapFrom(src => src.Party.PartyName));
+                    .ForMember(dest => dest.PartyId, opt => opt.MapFrom(src => src.PartyId)) // Map PartyId directly
+                    .ForMember(dest => dest.PartyName, opt => opt.MapFrom(src => src.Party.PartyName)); // Map PartyName
 
-                cfg.CreateMap<AssignPartyCreateDTO, AssignParty>();
             }).CreateMapper();
         }
 
@@ -33,8 +35,6 @@ namespace PartyProductAPI.Controllers
         {
             var invoiceQuery = from invoice in contex.Invoices
                                join party in contex.Parties on invoice.PartyId equals party.PartyId
-                               //join invoiceIteam in contex.InvoiceItems on invoice.Id equals invoiceIteam.InvoiceId
-                               //join product in contex.Products on invoiceIteam.ProductId equals product.ProductId
                                select new InvoiceDTO
                                {
                                    Id = invoice.Id,
@@ -46,6 +46,43 @@ namespace PartyProductAPI.Controllers
             var invoiceDTOs = await invoiceQuery.ToListAsync();
             return invoiceDTOs;
         }
+
+
+
+        [HttpGet("GetInvoiceHistory")]
+        public async Task<ActionResult> GetInvoiceHistory(string partyName = null, string productName = null, string invoiceNo = null, DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 10)
+        {
+            var partyNameParam = new SqlParameter("@PartyName", (object)partyName ?? DBNull.Value);
+            var productNameParam = new SqlParameter("@ProductName", productName ?? (object)DBNull.Value);
+            var invoiceNoParam = new SqlParameter("@InvoiceNo", invoiceNo ?? (object)DBNull.Value);
+            var startDateParam = new SqlParameter("@StartDate", startDate ?? (object)DBNull.Value);
+            var endDateParam = new SqlParameter("@EndDate", endDate ?? (object)DBNull.Value);
+            var pageNumberParam = new SqlParameter("@PageNumber", pageNumber);
+            var pageSizeParam = new SqlParameter("@PageSize", pageSize);
+
+            var invoiceHistory = await contex.Invoices
+        .FromSqlRaw("EXEC GetInvoiceHistoryFiltered @PartyName, @ProductName, @InvoiceNo, @StartDate, @EndDate, @PageSize, @PageNumber",
+            partyNameParam, productNameParam, invoiceNoParam, startDateParam, endDateParam, pageSizeParam, pageNumberParam)
+        .ToListAsync();
+
+
+            var mappedInvoices = invoiceHistory.Select(i => new InvoiceDTO
+            {
+                Id = i.Id,
+                PartyId = i.PartyId,
+                Date = i.Date,
+                PartyName = GetPartyName(i.PartyId)
+            }).ToList();
+
+            return Ok(mappedInvoices);
+        }
+
+        private string GetPartyName(int partyId)
+        {
+            var party = contex.Parties.FirstOrDefault(p => p.PartyId == partyId);
+            return party?.PartyName ?? "Unknown";
+        }
+
 
 
         [HttpDelete("{Id}")]

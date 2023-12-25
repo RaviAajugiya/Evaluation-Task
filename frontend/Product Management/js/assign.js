@@ -1,7 +1,13 @@
 let assignData;
+const token = localStorage.getItem('token');
+const headers = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${token}`
+};
+
 
 const loadData = async (url) => {
-    const res = await fetch(url);
+    const res = await fetch(url, {headers: headers});
     assignData = await res.json();
     console.log(assignData);
     $('#assignParty').DataTable({
@@ -35,7 +41,8 @@ async function editassign(assignId) {
 function deleteassign(assignId) {
     if (confirm('Are you sure you want to delete this party?')) {
         fetch(`https://localhost:44309/api/AssignParty/${assignId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers : headers
         })
             .then(response => {
                 if (response.ok) {
@@ -59,7 +66,7 @@ loadData('https://localhost:44309/api/AssignParty');
 $(document).ready(function () {
 
     const populateDropdown = async (url, dropdownId, valueField, textField) => {
-        const res = await fetch(url);
+        const res = await fetch(url, {headers: headers});
         const data = await res.json();
 
         const dropdown = $(`#${dropdownId}`);
@@ -80,6 +87,7 @@ $(document).ready(function () {
         $.ajax({
             url: `https://localhost:44309/api/AssignParty/${assignId}`,
             type: 'GET',
+            headers : headers,
             success: function (data) {
                 $('#partyName').val(data.partyId).change();
                 $('#productName').val(data.productId).change();
@@ -110,6 +118,7 @@ $(document).ready(function () {
             url: url,
             type: requestType,
             contentType: 'application/json',
+            headers : headers,
             data: JSON.stringify(assignData),
             success: function (data) {
                 console.log(`assign ${assignId ? 'updated' : 'added'} successfully:`, data);
