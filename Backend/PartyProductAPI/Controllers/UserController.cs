@@ -50,7 +50,7 @@ namespace PartyProductAPI.Controllers
             var tokenString = tokenHandler.WriteToken(token);
 
 
-            return Ok(new { Token = tokenString });
+            return Ok(new { Token = tokenString, });
         }
     }
 }

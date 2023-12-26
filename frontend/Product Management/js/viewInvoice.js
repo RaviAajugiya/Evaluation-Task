@@ -104,7 +104,7 @@ $(document).ready(function () {
     $('#quantity').val(rowData.quantity);
     $('#productRate').val(rowData.rate);
 
-    var productNameToSelect = rowData.productName; 
+    var productNameToSelect = rowData.productName;
     $('#productDropdown option').each(function () {
       if ($(this).text() === productNameToSelect) {
         $(this).prop('selected', true);
@@ -156,6 +156,20 @@ $(document).ready(function () {
     });
   });
 
+  $("#SendEmail").click(function () {
+    $.ajax({
+      type: "GET",
+      url: `https://localhost:44309/api/print/SendMail/${invoiceId}`,
+      headers: headers,
+      success: function (data) {
+        console.log("Email sent successfully");
+      },
+      error: function (error) {
+        console.error("Error sending email:", error);
+      }
+    });
+  });
+
 });
 
 
@@ -164,9 +178,12 @@ $("#PrintInvoice").click(function (e) {
   printInvoice();
 });
 
-function printInvoice(){
+function printInvoice() {
   window.print();
 }
+
+
+
 
 $("#EditInvoice").click(function (e) {
   e.preventDefault();
@@ -239,10 +256,10 @@ function editInvoice() {
 
   function fetchInvoiceProducts(partyId) {
     fetch(`https://localhost:44309/api/invoice/InvoiceProducts/${partyId}`,
-    {
-      method: 'GET',
-      headers: headers
-    })
+      {
+        method: 'GET',
+        headers: headers
+      })
       .then(response => response.json())
       .then(data => {
         $('#productDropdown').empty();
@@ -267,3 +284,49 @@ function updateDataTable() {
 
   $('#grandTotal').text(grandTotal.toFixed(2));
 }
+
+
+// document.getElementById("PrintInvoice").addEventListener("click", function () {
+//   printInvoice();
+// });
+
+// function printInvoice() {
+//   var printWindow = window.open("", "_blank");
+//   printWindow.document.write('<html><head><title>Print</title>');
+//   printWindow.document.write('</head><body>');
+//   printWindow.document.write(document.getElementById("invoice-container").innerHTML);
+//   printWindow.document.write('</body></html>');
+//   printWindow.document.close();
+//   printWindow.print();
+// }
+
+// document.getElementById("SendEmail").addEventListener("click", function () {
+//   sendEmail();
+// });
+
+// function sendEmail() {
+//   var body = document.getElementById("invoice-container").innerHTML;
+//   console.log(body);
+//   // fetch('send_email.php', {
+//   //   method: 'POST',
+//   //   headers: {
+//   //     'Content-Type': 'application/json',
+//   //   },
+//   //   body: JSON.stringify({
+//   //     to: 'recipient@example.com',
+//   //     subject: 'Invoice',
+//   //     body: body,
+//   //   }),
+//   // })
+//   //   .then(response => response.json())
+//   //   .then(data => {
+//   //     alert(data.message);
+//   //   })
+//   //   .catch(error => {
+//   //     console.error('Error:', error);
+//   //   });
+
+// }
+
+
+
