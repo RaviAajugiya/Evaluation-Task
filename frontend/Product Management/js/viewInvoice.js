@@ -1,6 +1,8 @@
 
 let editData;
 const token = localStorage.getItem('token');
+const email = localStorage.getItem('userEmail');
+
 const headers = {
   'Content-Type': 'application/json',
   'Authorization': `Bearer ${token}`
@@ -158,31 +160,38 @@ $(document).ready(function () {
 
   $("#SendEmail").click(function () {
     $.ajax({
-      type: "GET",
-      url: `https://localhost:44309/api/print/SendMail/${invoiceId}`,
+      type: "POST",
+      url: `https://localhost:44309/api/print/SendMail`,
       headers: headers,
+      data : JSON.stringify({
+        id : invoiceId,
+        email : email
+      }),
       success: function (data) {
-        console.log("Email sent successfully");
+        alert(`Email sent successfully to ${email}`)
       },
       error: function (error) {
         console.error("Error sending email:", error);
       }
     });
   });
-
 });
-
 
 $("#PrintInvoice").click(function (e) {
   e.preventDefault();
-  printInvoice();
+  generatePDF();
 });
 
-function printInvoice() {
-  window.print();
+function generatePDF() {
+  var element = document.querySelector('.invoice-container');
+  var opt = {
+      margin: 0.5,
+      filename: 'invoice.pdf',
+      html2canvas: { scale: 1 },
+      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait', precision: '12' }
+  };
+  html2pdf().set(opt).from(element).save();            
 }
-
-
 
 
 $("#EditInvoice").click(function (e) {
@@ -274,7 +283,6 @@ function editInvoice() {
   $('#partyDropdown').attr('disabled', true);
 }
 
-
 function updateDataTable() {
   $('#invoiceTable').DataTable().clear().rows.add(editData.products).draw();
 
@@ -284,49 +292,3 @@ function updateDataTable() {
 
   $('#grandTotal').text(grandTotal.toFixed(2));
 }
-
-
-// document.getElementById("PrintInvoice").addEventListener("click", function () {
-//   printInvoice();
-// });
-
-// function printInvoice() {
-//   var printWindow = window.open("", "_blank");
-//   printWindow.document.write('<html><head><title>Print</title>');
-//   printWindow.document.write('</head><body>');
-//   printWindow.document.write(document.getElementById("invoice-container").innerHTML);
-//   printWindow.document.write('</body></html>');
-//   printWindow.document.close();
-//   printWindow.print();
-// }
-
-// document.getElementById("SendEmail").addEventListener("click", function () {
-//   sendEmail();
-// });
-
-// function sendEmail() {
-//   var body = document.getElementById("invoice-container").innerHTML;
-//   console.log(body);
-//   // fetch('send_email.php', {
-//   //   method: 'POST',
-//   //   headers: {
-//   //     'Content-Type': 'application/json',
-//   //   },
-//   //   body: JSON.stringify({
-//   //     to: 'recipient@example.com',
-//   //     subject: 'Invoice',
-//   //     body: body,
-//   //   }),
-//   // })
-//   //   .then(response => response.json())
-//   //   .then(data => {
-//   //     alert(data.message);
-//   //   })
-//   //   .catch(error => {
-//   //     console.error('Error:', error);
-//   //   });
-
-// }
-
-
-

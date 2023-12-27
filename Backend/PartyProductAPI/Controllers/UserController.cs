@@ -52,5 +52,14 @@ namespace PartyProductAPI.Controllers
 
             return Ok(new { Token = tokenString, });
         }
+
+        [HttpPost("Register")]
+        public async Task<IActionResult> Register(User user)
+        {
+
+            contex.Add(user);
+            await contex.SaveChangesAsync();
+            return Ok();
+        }
     }
 }

@@ -1,6 +1,9 @@
 $(document).ready(function () {
   $('#logout').click(function () {
-    localStorage.removeItem('token'); 
-    console.log('Logged out'); 
+    if (confirm('Are you sure?')) {
+      localStorage.removeItem('token'); 
+      localStorage.removeItem('userEmail'); 
+      location.href = '/login.html'
+    }
   });
 });

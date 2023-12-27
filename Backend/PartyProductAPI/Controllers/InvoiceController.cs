@@ -50,7 +50,7 @@ namespace PartyProductAPI.Controllers
 
 
         [HttpGet("GetInvoiceHistory")]
-        public async Task<ActionResult> GetInvoiceHistory(string partyName = null, string productName = null, string invoiceNo = null, DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 10)
+        public async Task<ActionResult> GetInvoiceHistory(string partyName = null, string productName = null, string invoiceNo = null, DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 10, string sortbycolname = null)
         {
             var partyNameParam = new SqlParameter("@PartyName", (object)partyName ?? DBNull.Value);
             var productNameParam = new SqlParameter("@ProductName", productName ?? (object)DBNull.Value);
@@ -59,10 +59,12 @@ namespace PartyProductAPI.Controllers
             var endDateParam = new SqlParameter("@EndDate", endDate ?? (object)DBNull.Value);
             var pageNumberParam = new SqlParameter("@PageNumber", pageNumber);
             var pageSizeParam = new SqlParameter("@PageSize", pageSize);
+            var sortbycolnameParam = new SqlParameter("@sortbycolname", sortbycolname);
+
 
             var invoiceHistory = await contex.Invoices
-        .FromSqlRaw("EXEC GetInvoiceHistoryFiltered @PartyName, @ProductName, @InvoiceNo, @StartDate, @EndDate, @PageSize, @PageNumber",
-            partyNameParam, productNameParam, invoiceNoParam, startDateParam, endDateParam, pageSizeParam, pageNumberParam)
+        .FromSqlRaw("EXEC sort1 @PartyName, @ProductName, @InvoiceNo, @StartDate, @EndDate, @PageSize, @PageNumber, @sortbycolname",
+            partyNameParam, productNameParam, invoiceNoParam, startDateParam, endDateParam, pageSizeParam, pageNumberParam, sortbycolnameParam)
         .ToListAsync();
 
 

@@ -31,14 +31,14 @@ namespace PartyProductAPI.Controllers
             this.emailService = emailService;
         }
 
-        [HttpGet("SendMail/{id}")]
-        public async Task<ActionResult> Get(int id)
+        [HttpPost("SendMail")]
+        public async Task<ActionResult> SendMail([FromBody] emailDTO emailData)
         {
             var invoiceQuery = from invoice in contex.Invoices
                                join party in contex.Parties on invoice.PartyId equals party.PartyId
                                join invoiceItem in contex.InvoiceItems on invoice.Id equals invoiceItem.InvoiceId
                                join product in contex.Products on invoiceItem.ProductId equals product.ProductId
-                               where invoiceItem.InvoiceId == id
+                               where invoiceItem.InvoiceId == emailData.id
                                group new { invoice, party, product, invoiceItem } by invoice.Id into g
                                select new InvoiceDetailsDTO
                                {
@@ -70,7 +70,7 @@ namespace PartyProductAPI.Controllers
             var pdf = renderer.RenderHtmlAsPdf(htmlContent);
 
             pdf.SaveAs("output.pdf");
-            sendEmail();
+            sendEmail(emailData.email);
 
             return Ok();
         }
@@ -90,10 +90,10 @@ namespace PartyProductAPI.Controllers
             return Ok();
         }
 
-        public async void sendEmail()
+        public async void sendEmail(string email)
         {
             Mailrequest mailrequest = new Mailrequest();
-            mailrequest.ToEmail = "aajugiyaravi@gmail.com";
+            mailrequest.ToEmail = email;
             mailrequest.Subject = "Invoice";
             mailrequest.Body = "Invoice data";
             await emailService.SendEmailAsync(mailrequest);

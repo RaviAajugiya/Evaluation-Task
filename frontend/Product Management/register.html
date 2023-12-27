@@ -33,11 +33,11 @@
       <div class="collapse navbar-collapse" id="navbarNav">
         <ul class="navbar-nav ms-md-auto gap-2">
           <li class="nav-item rounded">
-            <a class="nav-link active" aria-current="page" href="login.html"><i
+            <a class="nav-link " aria-current="page" href="login.html"><i
                 class="bi bi-house-fill me-2"></i>Login</a>
           </li>
           <li class="nav-item rounded">
-            <a class="nav-link " aria-current="page" href="register.html"><i
+            <a class="nav-link active" aria-current="page" href="register.html"><i
                 class="bi bi-house-fill me-2"></i>Register</a>
           </li>
         </ul>
@@ -63,7 +63,7 @@
                 <input type="password" class="form-control" id="password" placeholder="Enter password" required>
               </div>
               <div class="text-center">
-                <button type="submit" class="btn btn-primary">Login</button>
+                <button type="submit" class="btn btn-primary">Register</button>
               </div>
             </form>
           </div>
@@ -93,17 +93,11 @@
 
         $.ajax({
           type: 'POST',
-          url: 'https://localhost:44309/api/user/login',
+          url: 'https://localhost:44309/api/user/Register',
           contentType: 'application/json',
           data: JSON.stringify(formData),
           success: function (response) {
-            const token = response.token;
-            // console.log('token', token);
-            localStorage.setItem('token', token);
-            localStorage.setItem('userEmail', formData.Username);
-            location.href = 'index.html'
-            console.log('localstorage',localStorage.getItem('token')); 
-            console.log('localstorage',localStorage.getItem('userEmail')); 
+            location.href = "login.html"
           },
           error: function (xhr, status, error) {
             console.error('Error:', error);
