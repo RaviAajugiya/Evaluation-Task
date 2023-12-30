@@ -15,54 +15,52 @@ $(document).ready(function () {
         const InvoiceNo = $('#invoiceNo').val();
         const StartDate = $('#startDate').val();
         const EndDate = $('#endDate').val();
-        const PageNumber = $('#pageNo').val();
-        const PageSize = $('#pageSize').val();
-        const sortbycolname = $('#sortBy').val();
     
         const queryParams = new URLSearchParams({
             PartyName,
             ProductName,
             InvoiceNo,
             StartDate,
-            EndDate,
-            PageSize,
-            PageNumber,
-            sortbycolname
+            EndDate
         });
     
         const apiUrl = `https://localhost:44309/api/invoice/GetInvoiceHistory?${queryParams}`;
     
-        fetch(apiUrl, {headers:headers})
-            .then(response => response.json())
-            .then(data => {
-                console.log(data);
+        $.ajax({
+            url: apiUrl,
+            headers: headers,
+            method: 'GET',
+                success: function (data) {
+                    console.log(data);
                 $('#invoiceHistory').DataTable().clear().rows.add(data).draw();
-            })
-            .catch(error => console.error('Error fetching invoice history:', error));
-    });                     
-
-
-    fetch('https://localhost:44309/api/invoice', {headers: headers})
-        .then(response => response.json())
-        .then(data => {
-            console.log('dt', data);
-            $('#invoiceHistory').DataTable({
-                data: data,
-                columns: [
-                    { data: 'id', title: 'id' },
-                    { data: 'partyId', title: 'partyId' },
-                    { data: 'partyName', title: 'partyName' },
-                    { data: 'date', title: 'date' },
-                    { data: 'total', title: 'total' },
-                    {
-                        title: 'Actions',
-                        render: function (data, type, row) {
-                            return '<button class="view-btn btn btn-outline-success btn-sm" data-id="' + row.id + '">View Invoice</button>';
-                        }
-                    }
-                ]
-            });
+            },
+            error: function (error) {
+                console.error('Error fetching invoice history:', error);
+            }
         });
+    });
+
+    $('#invoiceHistory').DataTable({
+        ajax: {
+            url: 'https://localhost:44309/api/invoice',
+            type: 'GET',
+            headers: headers,
+            dataSrc: ''
+        },
+        columns: [
+            { data: 'id', title: 'id' },
+            { data: 'partyId', title: 'partyId' },
+            { data: 'partyName', title: 'partyName' },
+            { data: 'date', title: 'date' },
+            { data: 'total', title: 'total' },
+            {
+                title: 'Actions',
+                render: function (data, type, row) {
+                    return '<button class="view-btn btn btn-outline-success btn-sm" data-id="' + row.id + '">View Invoice</button>';
+                }
+            }
+        ]
+    });
 
 
     $('#invoiceHistory').on('click', '.view-btn', function () {

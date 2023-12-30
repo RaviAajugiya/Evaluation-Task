@@ -5,18 +5,19 @@ const headers = {
     'Authorization': `Bearer ${token}`
 };
 
-
-const loadData = async (url) => {
-    const res = await fetch(url, { headers: headers });
-    assignData = await res.json();
-    console.log(assignData);
-    $('#assignParty').DataTable({
-        data: assignData,
+let DataTable;
+const loadData = (url) => {
+    DataTable = $('#assignParty').DataTable({
+        ajax: {
+            url: url,
+            headers: headers,
+            dataSrc: '',
+            type: 'GET'
+        },
         columns: [
-            { data: 'assignId', title: 'assignId' },
-            { data: 'partyName', title: 'party Name' },
-            { data: 'productName', title: 'product Name' },
-
+            { data: 'assignId', title: 'Assign Id' },
+            { data: 'partyName', title: 'Party Name' },
+            { data: 'productName', title: 'Product Name' },
             {
                 title: 'Actions',
                 render: function (data, type, row) {
@@ -24,7 +25,7 @@ const loadData = async (url) => {
                         <button class="btn btn-warning btn-sm" onclick="editassign(${row.assignId})">
                             <i class="bi bi-pencil-fill"></i> Edit
                         </button>
-                        <button class="btn btn-danger btn-sm ms-2" onclick="deleteassign(${row.assignId})">
+                        <button class="btn btn-danger btn-sm ms-2" onclick="deleteassign(${row.assignId},'${row.partyName}','${row.productName}')">
                             <i class="bi bi-trash-fill"></i> Delete
                         </button>
                     `;
@@ -34,27 +35,43 @@ const loadData = async (url) => {
     });
 }
 
+
+
 async function editassign(assignId) {
     location.href = `/assignPartyAdd.html?assignId=${assignId}`;
 }
 
-function deleteassign(assignId) {
-    if (confirm('Are you sure you want to delete this party?')) {
-        fetch(`https://localhost:44309/api/AssignParty/${assignId}`, {
-            method: 'DELETE',
-            headers: headers
-        })
-            .then(response => {
+
+function deleteassign(assignId, partyName, productName) {
+    Swal.fire({
+        title: 'Are you sure?',
+        html: `You are about to delete <strong>${partyName} - ${productName}</strong>. This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(`https://localhost:44309/api/AssignParty/${assignId}`, {
+                    method: 'DELETE',
+                    headers: headers
+                });
+
                 if (response.ok) {
-                    location.reload();
+                    DataTable.ajax.reload();
+                    showToast('Data deleted successfully');
+
                 } else {
-                    console.error('Failed to delete party:', response.statusText);
+                    console.error('Failed to delete :', response.statusText);
                 }
-            })
-            .catch(error => {
-                console.error('Error deleting party:', error);
-            });
-    }
+            } catch (error) {
+                console.error('Error deleting :', error);
+            }
+        }
+    });
 }
 
 
@@ -65,25 +82,33 @@ loadData('https://localhost:44309/api/AssignParty');
 
 $(document).ready(function () {
 
-    const populateDropdown = async (url, dropdownId, valueField, textField) => {
+    const populateDropdown = async (url, dropdownId, valueField, textField, defaultText) => {
         const res = await fetch(url, { headers: headers });
         const data = await res.json();
 
         const dropdown = $(`#${dropdownId}`);
         dropdown.empty();
+        dropdown.append(`<option value="">${defaultText}</option>`);
 
         data.forEach(item => {
             dropdown.append(`<option value="${item[valueField]}">${item[textField]}</option>`);
         });
     };
 
-    populateDropdown('https://localhost:44309/api/party', 'partyName', 'partyId', 'partyName');
-    populateDropdown('https://localhost:44309/api/product', 'productName', 'productId', 'productName');
+    populateDropdown('https://localhost:44309/api/party', 'partyName', 'partyId', 'partyName', 'Select Party');
+    populateDropdown('https://localhost:44309/api/product', 'productName', 'productId', 'productName', 'Select Product');
+
 
     const urlParams = new URLSearchParams(window.location.search);
     const assignId = urlParams.get('assignId');
+
     if (assignId) {
-        console.log(assignId);
+        $('#editCancle').removeAttr('hidden');
+        $('#editCancle').click(function () {
+            location.href = 'assignParty.html';
+        });
+        $('#title').text('Edit Assigned Party');
+
         $.ajax({
             url: `https://localhost:44309/api/AssignParty/${assignId}`,
             type: 'GET',
@@ -98,14 +123,12 @@ $(document).ready(function () {
         });
     }
 
-    console.log(assignId);
 
     $('#assignForm').submit(function (event) {
         event.preventDefault();
         var partyName = $('#partyName').val();
         var productName = $('#productName').val();
 
-        console.log('d', partyName, productName);
         var assignData = {
             partyId: partyName,
             productId: productName
@@ -121,10 +144,16 @@ $(document).ready(function () {
             headers: headers,
             data: JSON.stringify(assignData),
             success: function (data) {
-                location.href = `/assignParty.html`;
+                if (requestType === 'PUT') {
+                    location.href = 'assignParty.html';
+                    showToast('Assign Party edited successfully');
+                } else {
+                    console.log('Add successful');
+                    showToast('Party Assigned successfully');
+                }
             },
             error: function (error) {
-                alert("Already Assigned")
+                showToast('Party already Assigned', { backgroundColor: 'red' });
             }
         });
 
@@ -133,3 +162,17 @@ $(document).ready(function () {
 });
 
 
+
+function showToast(message, options = {}) {
+    Toastify({
+        text: message,
+        duration: options.duration || 3000,
+        newWindow: options.newWindow || true,
+        close: options.close || true,
+        gravity: options.gravity || 'top',
+        position: options.position || 'right',
+        backgroundColor: options.backgroundColor || 'green',
+        stopOnFocus: options.stopOnFocus || true,
+        progressBar: options.progressBar || true
+    }).showToast();
+}

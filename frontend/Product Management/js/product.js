@@ -5,28 +5,29 @@ const headers = {
     'Authorization': `Bearer ${token}`
 };
 
-const loadData = async (url) => {
-    const res = await fetch(url, {headers: headers});
-    productData = await res.json();
-    if (res.status === 401) {
-        window.location.href = '/login.html';
-        return;
-    }
-    $('#productTable').DataTable({
-        data: productData,
+let DataTable;
+const loadData = (url) => {
+    DataTable = $('#productTable').DataTable({
+        ajax: {
+            url: url,
+            headers: headers,
+            type: 'GET',
+            dataSrc: '',
+        },
         columns: [
-            { data: 'productId', title: 'product ID' },
-            { data: 'productName', title: 'product Name' },
+            { data: 'productId', title: 'Product ID' },
+            { data: 'productName', title: 'Product Name' },
             {
                 title: 'Actions',
                 render: function (data, type, row) {
                     return `
-                        <button class="btn btn-warning btn-sm" onclick="editproduct(${row.productId})">
+                        <button class="btn btn-warning btn-sm" onclick="editProduct(${row.productId})">
                             <i class="bi bi-pencil-fill"></i> Edit
                         </button>
-                        <button class="btn btn-danger btn-sm ms-2" onclick="deleteproduct(${row.productId})">
+                        <button class="btn btn-danger btn-sm ms-2" onclick="deleteProduct(${row.productId}, '${row.productName}')">
                             <i class="bi bi-trash-fill"></i> Delete
                         </button>
+
                     `;
                 }
             }
@@ -35,31 +36,41 @@ const loadData = async (url) => {
 }
 
 
-async function editproduct(productId) {
-        location.href = `/productAdd.html?productId=${productId}`;
+
+async function editProduct(productId) {
+    location.href = `/productAdd.html?productId=${productId}`;
 }
 
-function deleteproduct(productId) {
-    if (confirm('Are you sure you want to delete this product?')) {
-        fetch(`https://localhost:44309/api/product/${productId}`, {
-            method: 'DELETE',
-            headers: headers,
-        })
-            .then(response => {
+function deleteProduct(productId, productName) {
+    Swal.fire({
+        title: 'Are you sure?',
+        html: `You are about to delete <strong>${productName}</strong>. This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            try {
+                const response = await fetch(`https://localhost:44309/api/product/${productId}`, {
+                    method: 'DELETE',
+                    headers: headers
+                });
+
                 if (response.ok) {
-                    const index = productData.findIndex(product => product.productId === productId);
-                    if (index !== -1) {
-                        productData.splice(index, 1);
-                        $('#productTable').DataTable().clear().rows.add(productData).draw();
-                    }
+                    DataTable.ajax.reload();
+                    showToast('Product deleted successfully');
+
                 } else {
                     console.error('Failed to delete product:', response.statusText);
                 }
-            })
-            .catch(error => {
+            } catch (error) {
                 console.error('Error deleting product:', error);
-            });
-    }
+            }
+        }
+    });
 }
 
 loadData('https://localhost:44309/api/product');
@@ -69,23 +80,31 @@ loadData('https://localhost:44309/api/product');
 $(document).ready(function () {
     const urlParams = new URLSearchParams(window.location.search);
     const productId = urlParams.get('productId');
-    
+
     if (productId) {
+        $('#editCancle').removeAttr('hidden');
+        $('#editCancle').click(function () {
+            location.href = 'product.html';
+        });
+
+        $('#title').text('Edit Product');
         $.ajax({
             url: `https://localhost:44309/api/product/${productId}`,
             type: 'GET',
-            headers: headers,
+            headers: {
+                'Authorization': 'Bearer ' + localStorage.getItem('token')
+            },
             success: function (data) {
                 $('#productName').val(data.productName);
             },
             error: function (error) {
-                console.error('Error fetching product details:', error);
+                console.error('Error fetching party details:', error);
             }
         });
     }
 
     $('#productForm').submit(function (event) {
-        event.preventDefault(); 
+        event.preventDefault();
         var productName = $('#productName').val();
 
         var productData = {
@@ -102,14 +121,37 @@ $(document).ready(function () {
             data: JSON.stringify(productData),
             headers: headers,
             success: function (data) {
-                location.href = `/product.html`;
+                if (requestType === 'PUT') {
+                    location.href = 'product.html';
+                    showToast('Product edited successfully');
+                } else {
+                    console.log('Add successful');
+                    showToast('Product added successfully');
+                    $('#productName').val('');
+                }
             },
             error: function (error) {
-                alert("Product already exists");
+                showToast('Product already exists', { backgroundColor: 'red' });
+
             }
         });
 
 
     });
 });
+
+
+function showToast(message, options = {}) {
+    Toastify({
+        text: message,
+        duration: options.duration || 3000,
+        newWindow: options.newWindow || true,
+        close: options.close || true,
+        gravity: options.gravity || 'top',
+        position: options.position || 'right',
+        backgroundColor: options.backgroundColor || 'green',
+        stopOnFocus: options.stopOnFocus || true,
+        progressBar: options.progressBar || true
+    }).showToast();
+}
 

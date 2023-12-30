@@ -1,5 +1,6 @@
 
 let editData;
+let products;
 const token = localStorage.getItem('token');
 const email = localStorage.getItem('userEmail');
 
@@ -50,25 +51,6 @@ $(document).ready(function () {
             `);
 
 
-      $('#invoiceForm').submit(function (e) {
-        e.preventDefault();
-
-        $('#partyDropdown').prop('disabled', true);
-        editData.partyId = $('#partyDropdown').val();
-        editData.products.push({
-          productId: $('#productDropdown').val(),
-          productName: $('#productDropdown option:selected').text(),
-          quantity: parseFloat($('#quantity').val()),
-          rate: parseFloat($('#productRate').val()),
-          total: parseFloat($('#quantity').val()) * parseFloat($('#productRate').val())
-        });
-
-
-        $('#partyName').text($('#partyDropdown option:selected').text());
-        updateDataTable();
-      });
-
-
 
       $('#invoiceTable').DataTable({
         data: editData.products,
@@ -93,27 +75,114 @@ $(document).ready(function () {
     });
 
 
+  $('#invoiceForm').submit(function (e) {
+    e.preventDefault();
+
+    $('#partyDropdown').prop('disabled', true);
+    editData.partyId = $('#partyDropdown').val();
+    editData.products.push({
+      productId: $('#productDropdown').val(),
+      productName: $('#productDropdown option:selected').text(),
+      quantity: parseFloat($('#quantity').val()),
+      rate: parseFloat($('#productRate').val()),
+      total: parseFloat($('#quantity').val()) * parseFloat($('#productRate').val())
+    });
+
+    $('#partyName').text($('#partyDropdown option:selected').text());
+    updateDataTable();
+  });
 
   $('#invoiceTable').on('click', '.edit-btn', function () {
-    var row = $('#invoiceTable').DataTable().row($(this).parents('tr'));
+    var table = $('#invoiceTable').DataTable();
+    var tr = $(this).closest('tr');
+    var row = table.row(tr);
     var rowData = row.data();
-    var index = row.index();
+    var productId = rowData.productId;
+    var dropdownOptions = products.map(function (product) {
+      var selected = (product.productId === productId) ? 'selected' : '';
+      return '<option value="' + product.productId + '" ' + selected + '>' + product.productName + '</option>';
+    }).join('');
 
-    row.remove().draw();
-    editData.products.splice(index, 1);
-    updateDataTable();
+    tr.find('td').each(function (i) {
+      var cell = $(this);
+      var cellData = rowData[table.column(i).dataSrc()];
 
-    $('#quantity').val(rowData.quantity);
-    $('#productRate').val(rowData.rate);
-
-    var productNameToSelect = rowData.productName;
-    $('#productDropdown option').each(function () {
-      if ($(this).text() === productNameToSelect) {
-        $(this).prop('selected', true);
-      } else {
-        $(this).prop('selected', false);
+      if (i === 0) {
+        var dropdown = $('<select class="form-select">' + dropdownOptions + '</select>');
+        cell.html(dropdown);
+      } else if (i === 1 || i === 2) {
+        cell.html('<input type="number" class="form-control" id="input-' + i + '" value="' + cellData + '">');
       }
     });
+
+    var selectDropdown = tr.find('select');
+
+    selectDropdown.on('change', function () {
+      var selectedProductId = $(this).val();
+      console.log('Selected Product ID:', selectedProductId);
+
+      var selectedProduct = products.find(product => product.productId.toString() === selectedProductId.toString());
+      console.log('Selected Product:', selectedProduct);
+
+      $.ajax({
+        url: `https://localhost:44309/api/invoice/InvoiceProductRate/${selectedProduct.productId}`,
+        method: 'GET',
+        headers : headers,
+        success: function (rate) {
+          $('#input-2').val(rate);
+        }
+      });
+    });
+
+
+    tr.find('.edit-btn').hide();
+    tr.find('.delete-btn').hide();
+
+    tr.find('td:last').html('<button class="btn btn-success btn-sm save-btn">Save</button> ' +
+      '<button class="btn btn-secondary btn-sm cancel-btn ml-2">Cancel</button>');
+
+    tr.find('.cancel-btn').on('click', function () {
+      $('#invoiceTable').DataTable().clear().rows.add(editData.products).draw();
+      console.log('Canceled');
+    });
+
+    tr.find('.save-btn').on('click', function () {
+      var editedRow = {};
+      tr.find('td').each(function (i) {
+        var cellData;
+        if (i === 0) {
+          // Capture both the value and the displayed text from the select element
+          var selectElement = tr.find('select');
+          cellData = {
+            value: selectElement.val(),
+            name: selectElement.find('option:selected').text()
+          };
+        } else {
+          cellData = $('#input-' + i).val();
+        }
+        editedRow[table.column(i).dataSrc()] = cellData;
+      });
+      console.log('Updated Row Data:', editedRow);
+
+      console.log(editData.products.find(obj => obj.id === rowData.id));
+      var indexToUpdate = editData.products.findIndex(obj => obj.id === rowData.id);
+
+      // Update the object with the new data
+      editData.products[indexToUpdate] = {
+        id: rowData.id,
+        productId: editedRow.productName.value,
+        productName: editedRow.productName.name,
+        quantity: editedRow.quantity,
+        rate: editedRow.rate,
+        total: editedRow.quantity * editedRow.rate
+      };
+
+      $('#invoiceTable').DataTable().clear().rows.add(editData.products).draw();
+      console.log('Object updated:', editData);
+      updateDataTable();
+
+    });
+
   });
 
   $('#invoiceTable').on('click', '.delete-btn', function () {
@@ -127,6 +196,8 @@ $(document).ready(function () {
 
   $('#GenerateInvoice').click(function () {
     console.log(editData);
+    const { date, ...newData } = editData;
+    console.log(newData);
 
     $.ajax({
       url: `https://localhost:44309/api/Invoice/${editData.id}`,
@@ -142,7 +213,8 @@ $(document).ready(function () {
             'Authorization': 'Bearer ' + localStorage.getItem('token')
           },
           contentType: 'application/json',
-          data: JSON.stringify(editData),
+
+          data: JSON.stringify(newData),
           success: function (data) {
             console.log(data);
             window.location.href = `viewInvoice.html?id=${data}`;
@@ -163,9 +235,9 @@ $(document).ready(function () {
       type: "POST",
       url: `https://localhost:44309/api/print/SendMail`,
       headers: headers,
-      data : JSON.stringify({
-        id : invoiceId,
-        email : email
+      data: JSON.stringify({
+        id: invoiceId,
+        email: email
       }),
       success: function (data) {
         alert(`Email sent successfully to ${email}`)
@@ -185,17 +257,23 @@ $("#PrintInvoice").click(function (e) {
 function generatePDF() {
   var element = document.querySelector('.invoice-container');
   var opt = {
-      margin: 0.5,
-      filename: 'invoice.pdf',
-      html2canvas: { scale: 1 },
-      jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait', precision: '12' }
+    margin: 0.5,
+    filename: 'invoice.pdf',
+    html2canvas: { scale: 1 },
+    jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait', precision: '12' }
   };
-  html2pdf().set(opt).from(element).save();            
+  html2pdf().set(opt).from(element).save();
 }
 
 
 $("#EditInvoice").click(function (e) {
   e.preventDefault();
+  if (editData && editData.products) {
+    editData.products.forEach((product, index) => {
+      product.id = index + 1;
+    });
+  }
+  updateDataTable();
   editInvoice();
 });
 
@@ -271,6 +349,7 @@ function editInvoice() {
       })
       .then(response => response.json())
       .then(data => {
+        products = data;
         $('#productDropdown').empty();
         data.forEach(product => {
           $('#productDropdown').append(`<option value="${product.productId}">${product.productName}</option>`);

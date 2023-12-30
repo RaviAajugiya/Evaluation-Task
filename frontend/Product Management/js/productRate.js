@@ -5,23 +5,20 @@ const headers = {
     'Authorization': `Bearer ${token}`
 };
 
-const loadData = async (url) => {
-    const res = await fetch(url, {headers: headers});
-    productRateData = await res.json();
-    if (res.status === 401) {
-        window.location.href = '/login.html';
-        return;
-    }
-    console.log(productRateData);
-    $('#productRateTable').DataTable({
-        data: productRateData,
+let DataTable;
+const loadData = (url) => {
+    DataTable = $('#productRateTable').DataTable({
+        ajax: {
+            url: url,
+            headers: headers,
+            type: 'GET',
+            dataSrc: '',
+        },
         columns: [
-            { data: 'rateId', title: 'rateId' },
-            { data: 'productId', title: 'productId' },
-            { data: 'productName', title: 'productName' },
-            { data: 'rate', title: 'rate' },
-            { data: 'rateDate', title: 'rateDate' },
-
+            { data: 'rateId', title: 'Rate Id' },
+            { data: 'productName', title: 'Product Name' },
+            { data: 'rate', title: 'Rate' },
+            { data: 'rateDate', title: 'Date' },
             {
                 title: 'Actions',
                 render: function (data, type, row) {
@@ -37,7 +34,9 @@ const loadData = async (url) => {
             }
         ]
     });
-}
+};
+
+
 loadData('https://localhost:44309/api/ProductRate');
 
 
@@ -46,31 +45,44 @@ async function editproductRate(productRateId) {
 }
 
 function deleteproductRate(productRateId) {
-    if (confirm('Are you sure you want to delete this product Rate?')) {
-        fetch(`https://localhost:44309/api/ProductRate/${productRateId}`, {
-            method: 'DELETE',
-            headers: headers
 
-        })
-            .then(response => {
-                if (response.ok) {
-                    location.reload();
-                } else {
-                    console.error('Failed to delete party:', response.statusText);
-                }
-            })
-    }
+    Swal.fire({
+        title: 'Are you sure?',
+        html: `You are about to delete aate with Id <strong>${productRateId}</strong>. This action cannot be undone.`,
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#d33',
+        cancelButtonColor: '#3085d6',
+        confirmButtonText: 'Yes, delete it!',
+        cancelButtonText: 'Cancel'
+    }).then(async (result) => {
+        if (result.isConfirmed) {
+            const response = await fetch(`https://localhost:44309/api/ProductRate/${productRateId}`, {
+                method: 'DELETE',
+                headers: headers
+            });
+
+            if (response.ok) {
+                DataTable.ajax.reload();
+                showToast('Product Rate deleted successfully');
+
+            } else {
+                console.error('Failed to delete :', response.statusText);
+            }
+        }
+    });
 }
 
 
 $(document).ready(function () {
 
     const populateDropdown = async (url, dropdownId, valueField, textField) => {
-        const res = await fetch(url, {headers: headers});
+        const res = await fetch(url, { headers: headers });
         const data = await res.json();
 
         const dropdown = $(`#${dropdownId}`);
         dropdown.empty();
+        dropdown.append(`<option value="">Select Product</option>`);
 
         data.forEach(item => {
             dropdown.append(`<option value="${item[valueField]}">${item[textField]}</option>`);
@@ -82,7 +94,13 @@ $(document).ready(function () {
     const urlParams = new URLSearchParams(window.location.search);
     const productRateId = urlParams.get('productRateId');
     if (productRateId) {
-        console.log(productRateId);
+        $('#editCancle').removeAttr('hidden');
+        $('#editCancle').click(function () {
+            location.href = 'productRate.html';
+        });
+
+        $('#title').text('Edit Product Rate');
+
         $.ajax({
             url: `https://localhost:44309/api/ProductRate/${productRateId}`,
             type: 'GET',
@@ -98,8 +116,6 @@ $(document).ready(function () {
             }
         });
     }
-
-    console.log(productRateId);
 
     $('#productRateForm').submit(function (event) {
         event.preventDefault();
@@ -123,15 +139,39 @@ $(document).ready(function () {
             headers: headers,
             data: JSON.stringify(productRateData),
             success: function (data) {
-                console.log(`productRate ${productRateId ? 'updated' : 'added'} successfully:`, data);
+                if (requestType === 'PUT') {
+                    location.href = 'productRate.html';
+                    showToast('Product Rate edited successfully');
+                } else {
+                    console.log('Add successful');
+                    showToast('Rate added successfully');
+                    $('#productName').val('');
+                    $('#productRate').val('');
+
+                }
             },
             error: function (error) {
-                console.error(`Error ${productRateId ? 'updating' : 'adding'} productRate:`, error);
+                showToast('Rate already exists', { backgroundColor: 'red' });
             }
         });
 
-        location.href = `/productRate.html`;
-
     });
 });
+
+
+
+function showToast(message, options = {}) {
+    Toastify({
+        text: message,
+        duration: options.duration || 3000,
+        newWindow: options.newWindow || true,
+        close: options.close || true,
+        gravity: options.gravity || 'top',
+        position: options.position || 'right',
+        backgroundColor: options.backgroundColor || 'green',
+        stopOnFocus: options.stopOnFocus || true,
+        progressBar: options.progressBar || true
+    }).showToast();
+}
+
 
