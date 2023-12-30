@@ -22,13 +22,19 @@
         select[name = "invoiceHistory_length"]{
             width: 70px !important;
         }
+        .paginate_button{
+            padding: 0 !important;
+        }
+        #invoiceHistory_wrapper{
+            margin-bottom: 50px !important;
+        }
     </style>
 </head>
 
 <body>
     <nav class="navbar navbar-expand-lg navbar-dark bg-dark fixed-top">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">Product Management</a>
+            <a class="navbar-brand" href="index.html">Product Management</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
@@ -107,7 +113,7 @@
                         <div class="col-md-3">
                             <div class="mb-3">
                                 <label for="pageNo">Page No.</label>
-                                <input type="number" class="form-control" id="pageNo" onkeypress="return /[0-9]/i.test(event.key)">
+                                <input type="number" class="form-control" id="pageNo" value="1" onkeypress="return /[0-9]/i.test(event.key)">
                             </div>
                         </div>
                         <div class="col-md-3">

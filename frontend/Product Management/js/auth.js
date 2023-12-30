@@ -1,4 +1,6 @@
 $(document).ready(function () {
+    
+
   $('#logout').click(function () {
     if (confirm('Are you sure?')) {
       localStorage.removeItem('token'); 

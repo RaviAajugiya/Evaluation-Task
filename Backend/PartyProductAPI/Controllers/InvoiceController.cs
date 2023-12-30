@@ -35,16 +35,100 @@ namespace PartyProductAPI.Controllers
         {
             var invoiceQuery = from invoice in contex.Invoices
                                join party in contex.Parties on invoice.PartyId equals party.PartyId
+                               join invoiceItem in contex.InvoiceItems on invoice.Id equals invoiceItem.InvoiceId
+                               group new { invoice, invoiceItem } by new
+                               {
+                                   invoice.Id,
+                                   party.PartyName,
+                                   party.PartyId,
+                                   invoice.Date
+                               } into totalBill
                                select new InvoiceDTO
                                {
-                                   Id = invoice.Id,
-                                   PartyId = invoice.PartyId,
-                                   PartyName = party.PartyName,
-                                   Date = invoice.Date,
+                                   Id = totalBill.Key.Id,
+                                   PartyId = totalBill.Key.PartyId,
+                                   PartyName = totalBill.Key.PartyName,
+                                   Date = totalBill.Key.Date.ToString("dd-MM-yyyy hh:mm:ss tt"),
+                                   Total = totalBill.Sum(item => item.invoiceItem.Rate * item.invoiceItem.Quantity)
                                };
+
 
             var invoiceDTOs = await invoiceQuery.ToListAsync();
             return invoiceDTOs;
+        }
+
+        [HttpGet("{Id}")]
+        public async Task<ActionResult<InvoiceDetailsDTO>> Get(int Id)
+        {
+            var invoiceQuery = from invoice in contex.Invoices
+                               join party in contex.Parties on invoice.PartyId equals party.PartyId
+                               join invoiceIteam in contex.InvoiceItems on invoice.Id equals invoiceIteam.InvoiceId
+                               join product in contex.Products on invoiceIteam.ProductId equals product.ProductId
+                               where invoiceIteam.InvoiceId == Id
+                               group new { invoice, party, product, invoiceIteam } by invoice.Id into g
+                               select new InvoiceDetailsDTO
+                               {
+                                   Id = g.Key,
+                                   PartyId = g.First().invoice.PartyId,
+                                   PartyName = g.First().party.PartyName,
+                                   Date = g.First().invoice.Date.ToString("dd-MM-yyyy hh:mm:ss tt"),
+                                   Products = g.Select(item => new InvoiceProductsDTO
+                                   {
+                                       ProductId = item.product.ProductId,
+                                       ProductName = item.product.ProductName,
+                                       Quantity = item.invoiceIteam.Quantity,
+                                       Rate = item.invoiceIteam.Rate,
+                                       Total = item.invoiceIteam.Quantity * item.invoiceIteam.Rate
+                                   }).ToList()
+                               };
+
+            var invoiceDTO = await invoiceQuery.FirstOrDefaultAsync();
+            return invoiceDTO;
+        }
+
+        [HttpPost]
+        public async Task<ActionResult> Post([FromBody] InvoiceCreateDTO invoiceCreate)
+        {
+            var invoice = new Invoice
+            {
+                PartyId = invoiceCreate.PartyId,
+                Date = DateTime.Now
+            };
+            contex.Invoices.Add(invoice);
+            await contex.SaveChangesAsync();
+
+            foreach (var item in invoiceCreate.Products)
+            {
+                var invoiceIteam = new InvoiceItem
+                {
+                    InvoiceId = invoice.Id,
+                    ProductId = item.ProductId,
+                    Rate = item.Rate,
+                    Quantity = item.Quantity
+                };
+                contex.InvoiceItems.Add(invoiceIteam);
+            }
+            await contex.SaveChangesAsync();
+
+            return Ok(invoice.Id);
+
+        }
+
+        [HttpDelete("{Id}")]
+        public async Task<ActionResult> Delete(int Id)
+        {
+            var invoice = await contex.Invoices.FindAsync(Id);
+
+            if (invoice == null)
+            {
+                return NotFound();
+            }
+
+            var invoiceItems = contex.InvoiceItems.Where(item => item.InvoiceId == Id);
+            contex.InvoiceItems.RemoveRange(invoiceItems);
+            contex.Invoices.Remove(invoice);
+            await contex.SaveChangesAsync();
+            return NoContent();
         }
 
 
@@ -72,7 +156,7 @@ namespace PartyProductAPI.Controllers
             {
                 Id = i.Id,
                 PartyId = i.PartyId,
-                Date = i.Date,
+                Date = i.Date.ToString("dd-MM-yyyy hh:mm:ss tt"),
                 PartyName = GetPartyName(i.PartyId)
             }).ToList();
 
@@ -84,30 +168,6 @@ namespace PartyProductAPI.Controllers
             var party = contex.Parties.FirstOrDefault(p => p.PartyId == partyId);
             return party?.PartyName ?? "Unknown";
         }
-
-
-
-        [HttpDelete("{Id}")]
-        public async Task<ActionResult> Delete(int Id)
-        {
-            var invoice = await contex.Invoices.FindAsync(Id);
-
-            if (invoice == null)
-            {
-                return NotFound();
-            }
-
-            // Remove related 
-            var invoiceItems = contex.InvoiceItems.Where(item => item.InvoiceId == Id);
-            contex.InvoiceItems.RemoveRange(invoiceItems);
-
-            contex.Invoices.Remove(invoice);
-
-            await contex.SaveChangesAsync();
-
-            return NoContent();
-        }
-
 
 
         [HttpGet("InvoiceProducts/{Id}")]
@@ -146,68 +206,6 @@ namespace PartyProductAPI.Controllers
                 .FirstAsync();
 
             return latestRate;
-        }
-
-        [HttpGet("{Id}")]
-
-        public async Task<ActionResult<InvoiceDetailsDTO>> Get(int Id)
-        {
-            var invoiceQuery = from invoice in contex.Invoices
-                               join party in contex.Parties on invoice.PartyId equals party.PartyId
-                               join invoiceIteam in contex.InvoiceItems on invoice.Id equals invoiceIteam.InvoiceId
-                               join product in contex.Products on invoiceIteam.ProductId equals product.ProductId
-                               where invoiceIteam.InvoiceId == Id
-                               group new { invoice, party, product, invoiceIteam } by invoice.Id into g
-                               select new InvoiceDetailsDTO
-                               {
-                                   Id = g.Key,
-                                   PartyId = g.First().invoice.PartyId,
-                                   PartyName = g.First().party.PartyName,
-                                   Date = g.First().invoice.Date,
-                                   Products = g.Select(item => new InvoiceProductsDTO
-                                   {
-                                       ProductId = item.product.ProductId,
-                                       ProductName = item.product.ProductName,
-                                       Quantity = item.invoiceIteam.Quantity,
-                                       Rate = item.invoiceIteam.Rate,
-                                       Total = item.invoiceIteam.Quantity * item.invoiceIteam.Rate
-                                   }).ToList()
-                               };
-
-            var invoiceDTO = await invoiceQuery.FirstOrDefaultAsync();
-            return invoiceDTO;
-        }
-
-
-
-        [HttpPost]
-        public async Task<ActionResult> Post([FromBody] InvoiceCreateDTO invoiceCreate)
-        {
-
-            var invoice = new Invoice
-            {
-                PartyId = invoiceCreate.PartyId,
-                Date = DateTime.Now
-            };
-            contex.Invoices.Add(invoice);
-            await contex.SaveChangesAsync();
-
-
-            foreach (var item in invoiceCreate.Products)
-            {
-                var invoiceIteam = new InvoiceItem
-                {
-                    InvoiceId = invoice.Id,
-                    ProductId = item.ProductId,
-                    Rate = item.Rate,
-                    Quantity = item.Quantity
-                };
-                contex.InvoiceItems.Add(invoiceIteam);
-            }
-            await contex.SaveChangesAsync();
-
-            return Ok(invoice.Id);
-
         }
 
     }

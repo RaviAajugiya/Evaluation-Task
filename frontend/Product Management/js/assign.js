@@ -7,7 +7,7 @@ const headers = {
 
 
 const loadData = async (url) => {
-    const res = await fetch(url, {headers: headers});
+    const res = await fetch(url, { headers: headers });
     assignData = await res.json();
     console.log(assignData);
     $('#assignParty').DataTable({
@@ -35,14 +35,14 @@ const loadData = async (url) => {
 }
 
 async function editassign(assignId) {
-        location.href = `/assignPartyAdd.html?assignId=${assignId}`;
+    location.href = `/assignPartyAdd.html?assignId=${assignId}`;
 }
 
 function deleteassign(assignId) {
     if (confirm('Are you sure you want to delete this party?')) {
         fetch(`https://localhost:44309/api/AssignParty/${assignId}`, {
             method: 'DELETE',
-            headers : headers
+            headers: headers
         })
             .then(response => {
                 if (response.ok) {
@@ -66,7 +66,7 @@ loadData('https://localhost:44309/api/AssignParty');
 $(document).ready(function () {
 
     const populateDropdown = async (url, dropdownId, valueField, textField) => {
-        const res = await fetch(url, {headers: headers});
+        const res = await fetch(url, { headers: headers });
         const data = await res.json();
 
         const dropdown = $(`#${dropdownId}`);
@@ -87,7 +87,7 @@ $(document).ready(function () {
         $.ajax({
             url: `https://localhost:44309/api/AssignParty/${assignId}`,
             type: 'GET',
-            headers : headers,
+            headers: headers,
             success: function (data) {
                 $('#partyName').val(data.partyId).change();
                 $('#productName').val(data.productId).change();
@@ -101,7 +101,7 @@ $(document).ready(function () {
     console.log(assignId);
 
     $('#assignForm').submit(function (event) {
-        event.preventDefault(); 
+        event.preventDefault();
         var partyName = $('#partyName').val();
         var productName = $('#productName').val();
 
@@ -118,17 +118,16 @@ $(document).ready(function () {
             url: url,
             type: requestType,
             contentType: 'application/json',
-            headers : headers,
+            headers: headers,
             data: JSON.stringify(assignData),
             success: function (data) {
-                console.log(`assign ${assignId ? 'updated' : 'added'} successfully:`, data);
+                location.href = `/assignParty.html`;
             },
             error: function (error) {
-                console.error(`Error ${assignId ? 'updating' : 'adding'} assign:`, error);
+                alert("Already Assigned")
             }
         });
 
-        location.href = `/assignParty.html`; 
 
     });
 });

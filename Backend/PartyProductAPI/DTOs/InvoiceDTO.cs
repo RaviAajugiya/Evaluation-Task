@@ -13,7 +13,9 @@ namespace PartyProductAPI.DTOs
 
         public string PartyName { get; set; }
 
-        public DateTime Date { get; set; }
+        public string Date { get; set; }
+
+        public decimal Total { get; set; }
 
 
     }

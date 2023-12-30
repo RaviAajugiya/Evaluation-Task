@@ -8,6 +8,10 @@ const headers = {
 const loadData = async (url) => {
     const res = await fetch(url, {headers: headers});
     productData = await res.json();
+    if (res.status === 401) {
+        window.location.href = '/login.html';
+        return;
+    }
     $('#productTable').DataTable({
         data: productData,
         columns: [
@@ -98,14 +102,13 @@ $(document).ready(function () {
             data: JSON.stringify(productData),
             headers: headers,
             success: function (data) {
-                console.log(`product ${productId ? 'updated' : 'added'} successfully:`, data);
+                location.href = `/product.html`;
             },
             error: function (error) {
-                console.error(`Error ${productId ? 'updating' : 'adding'} product:`, error);
+                alert("Product already exists");
             }
         });
 
-        location.href = `/product.html`;
 
     });
 });

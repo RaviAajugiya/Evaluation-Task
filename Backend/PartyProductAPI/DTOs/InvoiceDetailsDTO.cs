@@ -5,7 +5,7 @@
         public int Id { get; set; }
         public int PartyId { get; set; }
         public string PartyName { get; set; }
-        public DateTime Date { get; set; }
+        public string Date { get; set; }
         public List<InvoiceProductsDTO> Products { get; set; }
     }
 

@@ -8,6 +8,10 @@ const headers = {
 const loadData = async (url) => {
     const res = await fetch(url, {headers: headers});
     productRateData = await res.json();
+    if (res.status === 401) {
+        window.location.href = '/login.html';
+        return;
+    }
     console.log(productRateData);
     $('#productRateTable').DataTable({
         data: productRateData,

@@ -12,6 +12,10 @@ const loadData = async (url) => {
         headers: headers,
     };
     const res = await fetch(url, options);
+    if (res.status === 401) {
+        window.location.href = '/login.html';
+        return;
+    }
     PartyData = await res.json();
     $('#example').DataTable({
         data: PartyData,
@@ -44,7 +48,7 @@ function deleteParty(partyId) {
     if (confirm('Are you sure you want to delete this party?')) {
         fetch(`https://localhost:44309/api/party/${partyId}`, {
             method: 'DELETE',
-            headers : headers
+            headers: headers
         })
             .then(response => {
                 if (response.ok) {
@@ -107,14 +111,13 @@ $(document).ready(function () {
             },
             data: JSON.stringify(partyData),
             success: function (data) {
-                console.log(`Party ${partyId ? 'updated' : 'added'} successfully:`, data);
+                location.href = `/index.html`;
             },
             error: function (error) {
-                console.error(`Error ${partyId ? 'updating' : 'adding'} party:`, error);
+                alert("Party already exists")
             }
         });
 
-        location.href = `/index.html`;
 
     });
 });

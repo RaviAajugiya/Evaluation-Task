@@ -45,7 +45,7 @@ namespace PartyProductAPI.Controllers
                                    Id = g.Key,
                                    PartyId = g.First().invoice.PartyId,
                                    PartyName = g.First().party.PartyName,
-                                   Date = g.First().invoice.Date,
+                                   Date = g.First().invoice.Date.ToString("dd-MM-yyyy hh:mm:ss tt"),
                                    Products = g.Select(item => new InvoiceProductsDTO
                                    {
                                        ProductId = item.product.ProductId,
@@ -63,7 +63,6 @@ namespace PartyProductAPI.Controllers
                 return NotFound();
             }
 
-
             var htmlContent = GenerateHtmlInvoice(invoiceDTO);
 
             var renderer = new ChromePdfRenderer();
@@ -80,13 +79,9 @@ namespace PartyProductAPI.Controllers
         [HttpPost]
         public async Task<IActionResult> PrintHtml([FromBody] printDTO html)
         {
-
             var renderer = new ChromePdfRenderer();
-
             var pdf = renderer.RenderHtmlAsPdf(html.htmldata);
-
             pdf.SaveAs("invoice.pdf");
-
             return Ok();
         }
 

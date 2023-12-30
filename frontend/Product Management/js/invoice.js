@@ -18,7 +18,6 @@ $(document).ready(function () {
         const PageNumber = $('#pageNo').val();
         const PageSize = $('#pageSize').val();
         const sortbycolname = $('#sortBy').val();
-
     
         const queryParams = new URLSearchParams({
             PartyName,
@@ -40,9 +39,7 @@ $(document).ready(function () {
                 $('#invoiceHistory').DataTable().clear().rows.add(data).draw();
             })
             .catch(error => console.error('Error fetching invoice history:', error));
-    });
-  
-    
+    });                     
 
 
     fetch('https://localhost:44309/api/invoice', {headers: headers})
@@ -56,6 +53,7 @@ $(document).ready(function () {
                     { data: 'partyId', title: 'partyId' },
                     { data: 'partyName', title: 'partyName' },
                     { data: 'date', title: 'date' },
+                    { data: 'total', title: 'total' },
                     {
                         title: 'Actions',
                         render: function (data, type, row) {
@@ -78,7 +76,4 @@ $(document).ready(function () {
     $('#invoiceReset').click(function(){
         location.reload();
     })
-
-
-
 });
