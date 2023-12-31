@@ -10,6 +10,6 @@
 
         public decimal Rate { get; set; }
 
-        public DateTime RateDate { get; set; }
+        public string RateDate { get; set; }
     }
 }

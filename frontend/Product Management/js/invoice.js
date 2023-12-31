@@ -9,29 +9,39 @@ $(document).ready(function () {
 
     $('#searchButton').click(function (e) {
         e.preventDefault();
-    
-        const PartyName = $('#party').val();
-        const ProductName = $('#product').val();
+        const partyId = $('#party').val();
+        const productId = $('input[type="checkbox"]:checked')
+        .map(function () {
+            return $(this).val();
+        })
+        .get()
+        .join(',');
         const InvoiceNo = $('#invoiceNo').val();
         const StartDate = $('#startDate').val();
         const EndDate = $('#endDate').val();
-    
+
         const queryParams = new URLSearchParams({
-            PartyName,
-            ProductName,
+            partyId,
+            productId,
             InvoiceNo,
             StartDate,
             EndDate
         });
-    
-        const apiUrl = `https://localhost:44309/api/invoice/GetInvoiceHistory?${queryParams}`;
-    
+
+        console.log(partyId,
+            productId,
+            InvoiceNo,
+            StartDate,
+            EndDate);
+
+        const apiUrl = `https://localhost:44309/api/invoice/FilterInvoice?${queryParams}`;
+
         $.ajax({
             url: apiUrl,
             headers: headers,
             method: 'GET',
-                success: function (data) {
-                    console.log(data);
+            success: function (data) {
+                console.log(data);
                 $('#invoiceHistory').DataTable().clear().rows.add(data).draw();
             },
             error: function (error) {
@@ -41,6 +51,7 @@ $(document).ready(function () {
     });
 
     $('#invoiceHistory').DataTable({
+        searching: false,
         ajax: {
             url: 'https://localhost:44309/api/invoice',
             type: 'GET',
@@ -68,10 +79,65 @@ $(document).ready(function () {
         window.location.href = 'viewInvoice.html?id=' + invoiceId;
     });
 
-    $('#addInvoice').click(function(){
+    $('#addInvoice').click(function () {
         location.href = '/addinvoice.html'
     })
-    $('#invoiceReset').click(function(){
+    $('#invoiceReset').click(function () {
         location.reload();
     })
+
+
+    $.ajax({
+        url: 'https://localhost:44309/api/party',
+        method: 'GET',
+        headers: headers,
+        success: function (data) {
+            var partyDropdown = $('#party');
+            partyDropdown.empty();
+            partyDropdown.append('<option value="" selected>Select Party</option>');
+
+            data.forEach(function (party) {
+                partyDropdown.append(`<option value="${party.partyId}">${party.partyName}</option>`);
+            });
+        },
+        error: function (error) {
+            console.error('Error fetching party data:', error);
+        }
+    });
+
+    $.ajax({
+        url: 'https://localhost:44309/api/product',
+        method: 'GET',
+        headers: headers,
+        success: function (data) {
+            var productDropdown = $('#productOptions ul');
+
+            productDropdown.empty();
+
+            data.forEach(function (product) {
+                productDropdown.append(`
+                    <li>
+                        <input type="checkbox" id="productCheck${product.productId}" value="${product.productId}">
+                        <label for="productCheck${product.productId}">${product.productName}</label>
+                    </li>
+                `);
+            });
+
+            productDropdown.on('change', 'input[type="checkbox"]', function () {
+                var selectedProducts = $('input[type="checkbox"]:checked')
+                    .map(function () {
+                        return $(this).next('label').text();
+                    })
+                    .get()
+                    .join(', ');
+
+                $('#productDropdown').text(selectedProducts || 'Select Products');
+            });
+        },
+        error: function (error) {
+            console.error('Error fetching product data:', error);
+        }
+    });
 });
+
+

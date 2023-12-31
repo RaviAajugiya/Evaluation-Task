@@ -80,6 +80,11 @@ $(document).ready(function () {
         ]
     });
 
+    $('#invoiceCancle').click(function () {
+        location.href = 'invoice.html'
+    });
+
+
     $('#GenerateInvoice').click(function () {
         console.log(formData);
 

@@ -64,10 +64,9 @@
       vertical-align: top;
     }
 
-    select[name = "invoiceTable_length"]{
-            width: 70px !important;
-        }
-    
+    select[name="invoiceTable_length"] {
+      width: 70px !important;
+    }
   </style>
 </head>
 
@@ -102,7 +101,7 @@
           </li>
           <li class="nav-item rounded">
             <button id="logout" class="btn btn-outline-danger" type="submit">logout</button>
-        </li>
+          </li>
         </ul>
       </div>
     </div>
@@ -142,6 +141,7 @@
 
     <div id="editModel"
       style="display: none; position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); background-color: #fff; padding: 20px; z-index: 1000; width: 80%; ">
+      <button type="button" id="closeEdit" class="btn-close" aria-label="Close" style="position: absolute; top: 10px; right: 10px;"></button>
       <h2 class="text-center">Edit Invoice</h2>
 
       <div class="container table-container">

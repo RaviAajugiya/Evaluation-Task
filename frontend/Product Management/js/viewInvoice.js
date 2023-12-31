@@ -194,6 +194,11 @@ $(document).ready(function () {
 
   });
 
+  $('#closeEdit').click(function (e) { 
+    location.reload();
+    
+  });
+
   $('#GenerateInvoice').click(function () {
     console.log(editData);
     const { date, ...newData } = editData;

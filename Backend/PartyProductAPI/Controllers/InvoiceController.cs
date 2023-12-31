@@ -57,6 +57,8 @@ namespace PartyProductAPI.Controllers
             return invoiceDTOs;
         }
 
+
+
         [HttpGet("{Id}")]
         public async Task<ActionResult<InvoiceDetailsDTO>> Get(int Id)
         {
@@ -132,35 +134,40 @@ namespace PartyProductAPI.Controllers
         }
 
 
-
-        [HttpGet("GetInvoiceHistory")]
-        public async Task<ActionResult> GetInvoiceHistory(string partyName = null, string productName = null, string invoiceNo = null, DateTime? startDate = null, DateTime? endDate = null, int pageNumber = 1, int pageSize = 10, string sortbycolname = null)
+        [HttpGet("FilterInvoice")]
+        public async Task<ActionResult> FilterInvoice(string partyId = null, string productId = null, string invoiceNo = null, DateTime? startDate = null, DateTime? endDate = null)
         {
-            var partyNameParam = new SqlParameter("@PartyName", (object)partyName ?? DBNull.Value);
-            var productNameParam = new SqlParameter("@ProductName", productName ?? (object)DBNull.Value);
+            var partyIdParam = new SqlParameter("@partyId", (object)partyId ?? DBNull.Value);
+            var productIdParam = new SqlParameter("@productId", productId ?? (object)DBNull.Value);
             var invoiceNoParam = new SqlParameter("@InvoiceNo", invoiceNo ?? (object)DBNull.Value);
             var startDateParam = new SqlParameter("@StartDate", startDate ?? (object)DBNull.Value);
             var endDateParam = new SqlParameter("@EndDate", endDate ?? (object)DBNull.Value);
-            var pageNumberParam = new SqlParameter("@PageNumber", pageNumber);
-            var pageSizeParam = new SqlParameter("@PageSize", pageSize);
-            var sortbycolnameParam = new SqlParameter("@sortbycolname", sortbycolname);
-
 
             var invoiceHistory = await contex.Invoices
-        .FromSqlRaw("EXEC sort1 @PartyName, @ProductName, @InvoiceNo, @StartDate, @EndDate, @PageSize, @PageNumber, @sortbycolname",
-            partyNameParam, productNameParam, invoiceNoParam, startDateParam, endDateParam, pageSizeParam, pageNumberParam, sortbycolnameParam)
-        .ToListAsync();
-
+                .FromSqlRaw("EXEC FilterInvoice @PartyId, @ProductID, @InvoiceNo, @StartDate, @EndDate",
+                    partyIdParam, productIdParam, invoiceNoParam, startDateParam, endDateParam)
+                .ToListAsync();
 
             var mappedInvoices = invoiceHistory.Select(i => new InvoiceDTO
             {
                 Id = i.Id,
                 PartyId = i.PartyId,
                 Date = i.Date.ToString("dd-MM-yyyy hh:mm:ss tt"),
-                PartyName = GetPartyName(i.PartyId)
+                PartyName = GetPartyName(i.PartyId),
+                Total = GetTotal(i.Id)
             }).ToList();
 
             return Ok(mappedInvoices);
+        }
+
+        private decimal GetTotal(int id)
+        {
+            var total = contex.Invoices
+         .Where(i => i.Id == id)
+         .Select(i => i.InvoiceItems.Sum(ii => ii.Quantity * ii.Rate))
+         .FirstOrDefault();
+
+            return total;
         }
 
         private string GetPartyName(int partyId)

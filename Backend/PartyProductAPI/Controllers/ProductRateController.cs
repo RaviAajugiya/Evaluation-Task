@@ -30,7 +30,8 @@ namespace PartyProductAPI.Controllers
             this.mapper = new MapperConfiguration(x =>
             {
                 x.CreateMap<ProductRate, ProductRateDTO>()
-                    .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.ProductName));
+                    .ForMember(dest => dest.ProductName, opt => opt.MapFrom(src => src.Product.ProductName))
+                    .ForMember(dest => dest.RateDate, opt => opt.MapFrom(src => src.RateDate.ToString("dd-MM-yyyy hh:mm:ss tt")));
                 x.CreateMap<ProductRateCreateDTO, ProductRate>();
             }).CreateMapper();
         }
@@ -53,6 +54,8 @@ namespace PartyProductAPI.Controllers
                 return NotFound();
             }
             return productRateDTO;
+
+
         }
 
         [HttpPost]
