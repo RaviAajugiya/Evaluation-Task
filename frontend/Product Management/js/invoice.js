@@ -59,11 +59,10 @@ $(document).ready(function () {
             dataSrc: ''
         },
         columns: [
-            { data: 'id', title: 'id' },
-            { data: 'partyId', title: 'partyId' },
-            { data: 'partyName', title: 'partyName' },
-            { data: 'date', title: 'date' },
-            { data: 'total', title: 'total' },
+            { data: 'id', title: 'Id' },
+            { data: 'partyName', title: 'Party Name' },
+            { data: 'date', title: 'Date' },    
+            { data: 'total', title: 'Total' },
             {
                 title: 'Actions',
                 render: function (data, type, row) {
