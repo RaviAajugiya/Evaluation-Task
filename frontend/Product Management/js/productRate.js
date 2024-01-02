@@ -14,6 +14,7 @@ const loadData = (url) => {
             type: 'GET',
             dataSrc: '',
         },
+        order: [[0, 'desc']],
         columns: [
             { data: 'rateId', title: 'Rate Id' },
             { data: 'productName', title: 'Product Name' },
@@ -26,7 +27,7 @@ const loadData = (url) => {
                         <button class="btn btn-warning btn-sm" onclick="editproductRate(${row.rateId})">
                             <i class="bi bi-pencil-fill"></i> Edit
                         </button>
-                        <button class="btn btn-danger btn-sm ms-2" onclick="deleteproductRate(${row.rateId})">
+                        <button class="btn btn-danger btn-sm ms-2" onclick="deleteproductRate('${row.productName}', ${row.rate}, ${row.rateId})">
                             <i class="bi bi-trash-fill"></i> Delete
                         </button>
                     `;
@@ -36,7 +37,6 @@ const loadData = (url) => {
     });
 };
 
-
 loadData('https://localhost:44309/api/ProductRate');
 
 
@@ -44,11 +44,12 @@ async function editproductRate(productRateId) {
     location.href = `/productRateAdd.html?productRateId=${productRateId}`;
 }
 
-function deleteproductRate(productRateId) {
+function deleteproductRate(name, rate, rateId) {
+    console.log(name,rate);
 
     Swal.fire({
         title: 'Are you sure?',
-        html: `You are about to delete aate with Id <strong>${productRateId}</strong>. This action cannot be undone.`,
+        html: `You are about to delete rate <strong>${name} - ${rate}</strong>. This action cannot be undone.`,
         icon: 'warning',
         showCancelButton: true,
         confirmButtonColor: '#d33',
@@ -57,7 +58,7 @@ function deleteproductRate(productRateId) {
         cancelButtonText: 'Cancel'
     }).then(async (result) => {
         if (result.isConfirmed) {
-            const response = await fetch(`https://localhost:44309/api/ProductRate/${productRateId}`, {
+            const response = await fetch(`https://localhost:44309/api/ProductRate/${rateId}`, {
                 method: 'DELETE',
                 headers: headers
             });
@@ -94,8 +95,8 @@ $(document).ready(function () {
     const urlParams = new URLSearchParams(window.location.search);
     const productRateId = urlParams.get('productRateId');
     if (productRateId) {
-        $('#editCancle').removeAttr('hidden');
-        $('#editCancle').click(function () {
+        $('#editCancel').removeAttr('hidden');
+        $('#editCancel').click(function () {
             location.href = 'productRate.html';
         });
 
@@ -141,13 +142,10 @@ $(document).ready(function () {
             success: function (data) {
                 if (requestType === 'PUT') {
                     location.href = 'productRate.html';
-                    showToast('Product Rate edited successfully');
+                    localStorage.setItem('ToastMessage','Product Rate edited successfully');
                 } else {
-                    console.log('Add successful');
-                    showToast('Rate added successfully');
-                    $('#productName').val('');
-                    $('#productRate').val('');
-
+                    location.href = 'productRate.html';
+                    localStorage.setItem('ToastMessage','Rate added successfully');
                 }
             },
             error: function (error) {

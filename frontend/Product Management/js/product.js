@@ -14,6 +14,7 @@ const loadData = (url) => {
             type: 'GET',
             dataSrc: '',
         },
+        order: [[0, 'desc']],
         columns: [
             { data: 'productId', title: 'Product ID' },
             { data: 'productName', title: 'Product Name' },
@@ -82,8 +83,8 @@ $(document).ready(function () {
     const productId = urlParams.get('productId');
 
     if (productId) {
-        $('#editCancle').removeAttr('hidden');
-        $('#editCancle').click(function () {
+        $('#editCancel').removeAttr('hidden');
+        $('#editCancel').click(function () {
             location.href = 'product.html';
         });
 
@@ -101,6 +102,8 @@ $(document).ready(function () {
                 console.error('Error fetching party details:', error);
             }
         });
+    } else {
+
     }
 
     $('#productForm').submit(function (event) {
@@ -123,11 +126,10 @@ $(document).ready(function () {
             success: function (data) {
                 if (requestType === 'PUT') {
                     location.href = 'product.html';
-                    showToast('Product edited successfully');
+                    localStorage.setItem('ToastMessage', 'Product edited successfully');
                 } else {
-                    console.log('Add successful');
-                    showToast('Product added successfully');
-                    $('#productName').val('');
+                    location.href = 'product.html';
+                    localStorage.setItem('ToastMessage', 'Product added successfully');
                 }
             },
             error: function (error) {

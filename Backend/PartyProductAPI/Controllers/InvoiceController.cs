@@ -5,6 +5,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using PartyProductAPI.DTOs;
+using System.Data;
 
 namespace PartyProductAPI.Controllers
 {
@@ -29,34 +30,6 @@ namespace PartyProductAPI.Controllers
 
             }).CreateMapper();
         }
-
-        [HttpGet]
-        public async Task<ActionResult<List<InvoiceDTO>>> Get()
-        {
-            var invoiceQuery = from invoice in contex.Invoices
-                               join party in contex.Parties on invoice.PartyId equals party.PartyId
-                               join invoiceItem in contex.InvoiceItems on invoice.Id equals invoiceItem.InvoiceId
-                               group new { invoice, invoiceItem } by new
-                               {
-                                   invoice.Id,
-                                   party.PartyName,
-                                   party.PartyId,
-                                   invoice.Date
-                               } into totalBill
-                               select new InvoiceDTO
-                               {
-                                   Id = totalBill.Key.Id,
-                                   PartyId = totalBill.Key.PartyId,
-                                   PartyName = totalBill.Key.PartyName,
-                                   Date = totalBill.Key.Date.ToString("dd-MM-yyyy hh:mm:ss tt"),
-                                   Total = totalBill.Sum(item => item.invoiceItem.Rate * item.invoiceItem.Quantity)
-                               };
-
-
-            var invoiceDTOs = await invoiceQuery.ToListAsync();
-            return invoiceDTOs;
-        }
-
 
 
         [HttpGet("{Id}")]
@@ -134,19 +107,28 @@ namespace PartyProductAPI.Controllers
         }
 
 
-        [HttpGet("FilterInvoice")]
-        public async Task<ActionResult> FilterInvoice(string partyId = null, string productId = null, string invoiceNo = null, DateTime? startDate = null, DateTime? endDate = null)
+        [HttpPost("FilterInvoice")]
+        public async Task<ActionResult> FilterInvoice([FromBody] FilterDataRequest filterRequest)
         {
-            var partyIdParam = new SqlParameter("@partyId", (object)partyId ?? DBNull.Value);
-            var productIdParam = new SqlParameter("@productId", productId ?? (object)DBNull.Value);
-            var invoiceNoParam = new SqlParameter("@InvoiceNo", invoiceNo ?? (object)DBNull.Value);
-            var startDateParam = new SqlParameter("@StartDate", startDate ?? (object)DBNull.Value);
-            var endDateParam = new SqlParameter("@EndDate", endDate ?? (object)DBNull.Value);
+            var partyIdParam = new SqlParameter("@partyId", filterRequest.PartyId ?? (object)DBNull.Value);
+            var productIdParam = new SqlParameter("@productId", filterRequest.ProductId ?? (object)DBNull.Value);
+            var invoiceNoParam = new SqlParameter("@InvoiceNo", filterRequest.InvoiceNo ?? (object)DBNull.Value);
+            var startDateParam = new SqlParameter("@StartDate", filterRequest.StartDate ?? (object)DBNull.Value);
+            var endDateParam = new SqlParameter("@EndDate", filterRequest.EndDate ?? (object)DBNull.Value);
+            var orderDirectionParam = new SqlParameter("@OrderDirection", filterRequest.Order ?? (object)DBNull.Value);
+            var pageNoParam = new SqlParameter("@PageNo", filterRequest.PageNo);
+            var pageSizeParam = new SqlParameter("@PageSize", filterRequest.PageSize);
+            var sortColumnParam = new SqlParameter("@SortColumn", filterRequest.Column ?? (object)DBNull.Value);
+
+            var totalCountParam = new SqlParameter("@TotalCount", SqlDbType.Int);
+            totalCountParam.Direction = ParameterDirection.Output;
 
             var invoiceHistory = await contex.Invoices
-                .FromSqlRaw("EXEC FilterInvoice @PartyId, @ProductID, @InvoiceNo, @StartDate, @EndDate",
-                    partyIdParam, productIdParam, invoiceNoParam, startDateParam, endDateParam)
+                .FromSqlRaw("EXEC FilterInvoice @PartyId, @ProductID, @InvoiceNo, @StartDate, @EndDate, @OrderDirection, @PageNo, @PageSize, @SortColumn, @TotalCount OUTPUT",
+                    partyIdParam, productIdParam, invoiceNoParam, startDateParam, endDateParam, orderDirectionParam, pageNoParam, pageSizeParam, sortColumnParam, totalCountParam)
                 .ToListAsync();
+
+            var totalCount = (int)totalCountParam.Value;
 
             var mappedInvoices = invoiceHistory.Select(i => new InvoiceDTO
             {
@@ -157,8 +139,11 @@ namespace PartyProductAPI.Controllers
                 Total = GetTotal(i.Id)
             }).ToList();
 
-            return Ok(mappedInvoices);
+            return Ok(new { Invoices = mappedInvoices, TotalCount = totalCount });
         }
+
+
+
 
         private decimal GetTotal(int id)
         {

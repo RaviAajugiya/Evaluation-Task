@@ -13,6 +13,7 @@ const loadData = (url) => {
             type: 'GET',
             dataSrc: '',
         },
+        order: [[0, 'desc']],
         columns: [
             { data: 'partyId', title: 'Party ID' },
             { data: 'partyName', title: 'Party Name' },
@@ -78,8 +79,8 @@ $(document).ready(function () {
     const partyId = urlParams.get('partyId');
 
     if (partyId) {
-        $('#editCancle').removeAttr('hidden');
-        $('#editCancle').click(function () {
+        $('#editCancel').removeAttr('hidden');
+        $('#editCancel').click(function () {
             location.href = 'index.html';
         });
 
@@ -121,11 +122,10 @@ $(document).ready(function () {
             success: function (data) {
                 if (requestType === 'PUT') {
                     location.href = 'index.html';
-                    showToast('Party edited successfully');
+                    localStorage.setItem('ToastMessage','Party edited successfully');
                 } else {
-                    console.log('Add successful');
-                    showToast('Party added successfully');
-                    $('#partyName').val('');
+                    location.href = 'index.html';
+                    localStorage.setItem('ToastMessage','Party added successfully');
                 }
             },
 
@@ -136,10 +136,11 @@ $(document).ready(function () {
     });
 });
 
+
 function showToast(message, options = {}) {
     Toastify({
         text: message,
-        duration: options.duration || 3000,
+        duration: options.duration || 1000,
         newWindow: options.newWindow || true,
         close: options.close || true,
         gravity: options.gravity || 'top',
@@ -148,4 +149,4 @@ function showToast(message, options = {}) {
         stopOnFocus: options.stopOnFocus || true,
         progressBar: options.progressBar || true
     }).showToast();
-}
+  }

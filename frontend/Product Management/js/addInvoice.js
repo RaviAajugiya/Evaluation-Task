@@ -80,7 +80,7 @@ $(document).ready(function () {
         ]
     });
 
-    $('#invoiceCancle').click(function () {
+    $('#invoiceCancel').click(function () {
         location.href = 'invoice.html'
     });
 
@@ -95,6 +95,7 @@ $(document).ready(function () {
             data: JSON.stringify(formData),
             success: function (data) {
                 location.href = 'invoice.html'
+                localStorage.setItem('ToastMessage','Invoice added successfully');
             },
             error: function (error) {
                 console.log(error);

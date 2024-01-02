@@ -127,7 +127,7 @@ $(document).ready(function () {
       $.ajax({
         url: `https://localhost:44309/api/invoice/InvoiceProductRate/${selectedProduct.productId}`,
         method: 'GET',
-        headers : headers,
+        headers: headers,
         success: function (rate) {
           $('#input-2').val(rate);
         }
@@ -194,9 +194,9 @@ $(document).ready(function () {
 
   });
 
-  $('#closeEdit').click(function (e) { 
+  $('#closeEdit').click(function (e) {
     location.reload();
-    
+
   });
 
   $('#GenerateInvoice').click(function () {
@@ -221,8 +221,9 @@ $(document).ready(function () {
 
           data: JSON.stringify(newData),
           success: function (data) {
-            console.log(data);
             window.location.href = `viewInvoice.html?id=${data}`;
+            localStorage.setItem('ToastMessage','Invoice edited successfully');
+
           },
           error: function (error) {
             console.log(error);
@@ -235,6 +236,10 @@ $(document).ready(function () {
     });
   });
 
+  $("#CloseInvoice").click(function (){
+    window.location.href = `invoice.html`;
+  })
+
   $("#SendEmail").click(function () {
     $.ajax({
       type: "POST",
@@ -245,7 +250,7 @@ $(document).ready(function () {
         email: email
       }),
       success: function (data) {
-        alert(`Email sent successfully to ${email}`)
+        localStorage.setItem('ToastMessage','Email sent successfully to ${email}');
       },
       error: function (error) {
         console.error("Error sending email:", error);

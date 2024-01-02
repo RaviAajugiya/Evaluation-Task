@@ -109,6 +109,9 @@
             location.href = 'index.html'
             console.log('localstorage', localStorage.getItem('token'));
             console.log('localstorage', localStorage.getItem('userEmail'));
+
+            localStorage.setItem('ToastMessage','Welcome to WeyBee Solutions!');
+
           },
           error: function (xhr, status, error) {
             showToast("invalid credentials",{ backgroundColor: 'red' });

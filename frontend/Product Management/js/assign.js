@@ -14,6 +14,7 @@ const loadData = (url) => {
             dataSrc: '',
             type: 'GET'
         },
+        order: [[0, 'desc']],
         columns: [
             { data: 'assignId', title: 'Assign Id' },
             { data: 'partyName', title: 'Party Name' },
@@ -25,7 +26,7 @@ const loadData = (url) => {
                         <button class="btn btn-warning btn-sm" onclick="editassign(${row.assignId})">
                             <i class="bi bi-pencil-fill"></i> Edit
                         </button>
-                        <button class="btn btn-danger btn-sm ms-2" onclick="deleteassign(${row.assignId},'${row.partyName}','${row.productName}')">
+                        <button class="btn btn-danger btn-sm ms-2" onclick="deleteassign(${row.productId}, '${row.productName}')">
                             <i class="bi bi-trash-fill"></i> Delete
                         </button>
                     `;
@@ -34,8 +35,6 @@ const loadData = (url) => {
         ]
     });
 }
-
-
 
 async function editassign(assignId) {
     location.href = `/assignPartyAdd.html?assignId=${assignId}`;
@@ -146,10 +145,10 @@ $(document).ready(function () {
             success: function (data) {
                 if (requestType === 'PUT') {
                     location.href = 'assignParty.html';
-                    showToast('Assign Party edited successfully');
+                    localStorage.setItem('ToastMessage','Assign Party edited successfully');
                 } else {
-                    console.log('Add successful');
-                    showToast('Party Assigned successfully');
+                    location.href = 'assignParty.html';
+                    localStorage.setItem('ToastMessage','Party Assigned successfully');
                 }
             },
             error: function (error) {

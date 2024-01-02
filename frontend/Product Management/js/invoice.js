@@ -3,75 +3,132 @@ const headers = {
     'Content-Type': 'application/json',
     'Authorization': `Bearer ${token}`
 };
-
+let invoiceTable;
 
 $(document).ready(function () {
+    let DataCount;
+    let filter = {
+        Order: 'asc',
+        PageNo: 1,
+        PageSize: 5,
+        Column: null,
+        StartDate: null,
+        EndDate: null,
+        InvoiceNo: null,
+        ProductId: null,
+        PartyId: null
+    };
 
-    $('#searchButton').click(function (e) {
-        e.preventDefault();
-        const partyId = $('#party').val();
-        const productId = $('input[type="checkbox"]:checked')
-        .map(function () {
-            return $(this).val();
-        })
-        .get()
-        .join(',');
-        const InvoiceNo = $('#invoiceNo').val();
-        const StartDate = $('#startDate').val();
-        const EndDate = $('#endDate').val();
-
-        const queryParams = new URLSearchParams({
-            partyId,
-            productId,
-            InvoiceNo,
-            StartDate,
-            EndDate
-        });
-
-        console.log(partyId,
-            productId,
-            InvoiceNo,
-            StartDate,
-            EndDate);
-
-        const apiUrl = `https://localhost:44309/api/invoice/FilterInvoice?${queryParams}`;
-
-        $.ajax({
-            url: apiUrl,
-            headers: headers,
-            method: 'GET',
-            success: function (data) {
-                console.log(data);
-                $('#invoiceHistory').DataTable().clear().rows.add(data).draw();
-            },
-            error: function (error) {
-                console.error('Error fetching invoice history:', error);
+    function convertEmptyStringsToNull(obj) {
+        for (const prop in obj) {
+            if (obj.hasOwnProperty(prop) && typeof obj[prop] === 'string') {
+                obj[prop] = obj[prop].trim() === '' ? null : obj[prop];
             }
-        });
+        }
+    }
+
+    $('#pageSize').change(function () {
+        filter.PageSize = $('#pageSize').val();
+        filter.PageNo = 1;
+        console.log(filter);
+        filterAndReloadTable();
     });
 
-    $('#invoiceHistory').DataTable({
+    function filterAndReloadTable() {
+        convertEmptyStringsToNull(filter);
+        invoiceTable.ajax.reload();
+    }
+
+    let updatePaginationButtons = function () {
+        $('#prevPageBtn').prop('disabled', filter.PageNo <= 1);
+        $('#nextPageBtn').prop('disabled', (filter.PageNo * filter.PageSize) >= DataCount);
+    };
+
+    invoiceTable = $('#invoiceHistory').DataTable({
         searching: false,
+        ordering: false,
+        "bPaginate": false,
         ajax: {
-            url: 'https://localhost:44309/api/invoice',
-            type: 'GET',
+            url: 'https://localhost:44309/api/invoice/FilterInvoice',
+            type: 'POST',
             headers: headers,
-            dataSrc: ''
+            dataSrc: function (json) {
+                DataCount = json.totalCount;
+                updatePaginationButtons();
+                return json.invoices;
+            },
+            data: function (data) {
+                return JSON.stringify(filter);
+            },
+            contentType: 'application/json',
+            error: function (xhr, error, thrown) {
+                console.log('AJAX Error:', xhr, error, thrown);
+                console.log(filter);
+            }
         },
+
         columns: [
             { data: 'id', title: 'Id' },
             { data: 'partyName', title: 'Party Name' },
-            { data: 'date', title: 'Date' },    
+            { data: 'date', title: 'Date' },
             { data: 'total', title: 'Total' },
             {
                 title: 'Actions',
                 render: function (data, type, row) {
-                    return '<button class="view-btn btn btn-outline-success btn-sm" data-id="' + row.id + '">View Invoice</button>';
+                    return `<button class="view-btn btn btn-outline-success btn-sm" data-id=${row.id}>View</button>`;
                 }
             }
-        ]
+        ],
+        initComplete: function () {
+            $('#prevPageBtn').on('click', function () {
+                if (filter.PageNo > 1) {
+                    filter.PageNo--;
+                    filterAndReloadTable();
+                }
+            });
+
+            $('#nextPageBtn').on('click', function () {
+                if ((filter.PageNo * filter.PageSize) < DataCount) {
+                    filter.PageNo++;
+                    filterAndReloadTable();
+                }
+            });
+
+            $('#invoiceHistory thead').on('click', 'th', function () {
+                console.log('Header clicked:', $(this).text());
+                filter.Column = $(this).text().replace(" ", "");
+                filter.Order = filter.Order === 'asc' ? 'desc' : 'asc';
+                filterAndReloadTable();
+            });
+        }
     });
 
+    $('#party, input[type="checkbox"], #invoiceNo, #startDate, #endDate').on('change', function () {
+        filter.PartyId = $('#party').val();
+        filter.ProductId = $('input[type="checkbox"]:checked')
+            .map(function () {
+                return $(this).val();
+            })
+            .get()
+            .join(',');
+        filter.InvoiceNo = $('#invoiceNo').val();
+        filter.StartDate = $('#startDate').val();
+        filter.EndDate = $('#endDate').val();
+
+        filterAndReloadTable();
+    });
+
+    $('#productDropdown').on('shown.bs.dropdown', function () {
+        $('input[type="checkbox"]').on('change', function () {
+            filter.ProductId = $('input[type="checkbox"]:checked')
+                .map(function () {
+                    return $(this).val();
+                })
+                .get()
+                .join(',');
+            filterAndReloadTable();
+        });
+    });
 
     $('#invoiceHistory').on('click', '.view-btn', function () {
         var invoiceId = $(this).data('id');
@@ -103,6 +160,7 @@ $(document).ready(function () {
             console.error('Error fetching party data:', error);
         }
     });
+
 
     $.ajax({
         url: 'https://localhost:44309/api/product',
@@ -138,5 +196,4 @@ $(document).ready(function () {
         }
     });
 });
-
 
