@@ -1,10 +1,13 @@
 ﻿global using PartyProductAPI.Models;
+using DinkToPdf.Contracts;
+using DinkToPdf;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
 using PartyProductAPI.Helper;
 using PartyProductAPI.Service;
 using System.Text;
 using System.Text.Json.Serialization;
+
 var builder = WebApplication.CreateBuilder(args);
 var MyAllowSpecificOrigins = "_myAllowSpecificOrigins";
 
@@ -17,6 +20,8 @@ builder.Services.AddAutoMapper(typeof(Program));
 
 builder.Services.Configure<EmailSettings>(builder.Configuration.GetSection("EmailSettings"));
 builder.Services.AddTransient<IEmailService, EmailService>();
+builder.Services.AddSingleton(typeof(IConverter), new SynchronizedConverter(new PdfTools()));
+
 
 
 builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)

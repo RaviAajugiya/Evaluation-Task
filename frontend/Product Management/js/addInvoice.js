@@ -98,7 +98,9 @@ $(document).ready(function () {
                 localStorage.setItem('ToastMessage','Invoice added successfully');
             },
             error: function (error) {
-                console.log(error);
+                if (error.status === 401) {
+                    location.href = 'login.html'
+                }
             }
         });
 

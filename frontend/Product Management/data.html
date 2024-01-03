@@ -4,36 +4,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Toast on Reload</title>
-    <!-- Include Toastify CSS and JS files -->
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/toastify-js/src/toastify.min.css">
+    <title>Select2 with Bootstrap Example</title>
+
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/select2/4.0.13/js/select2.min.js"></script>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css">
+
 </head>
 
-<body>
-    
-    <div id="toast" style="display: none;">
-        This is a toast message!
+<body class="container mt-5">
+    <div class="mb-3">
+        <label for="productDropdown" class="form-label">Product</label>
+        <select class="form-select"  id="mySelect" name="productId" multiple required>
+            <option value="">Skills</option>
+            <option value="angular">Angular</option>
+            <option value="css">CSS</option>
+            <option value="design">Graphic Design</option>
+            <option value="ember">Ember</option>
+            <option value="html">HTML</option>
+            <option value="ia">Information Architecture</option>
+        </select>
     </div>
-
-    <script src="https://cdn.jsdelivr.net/npm/toastify-js"></script>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
-            const shouldShowToast = localStorage.getItem('showToastOnReload');
-
-            if (shouldShowToast) {
-                Toastify({
-                    text: "This is a toast message!",
-                    duration: 3000, // 3000 milliseconds (3 seconds) in this example
-                    close: true,
-                    gravity: "top", // You can change the position as needed
-                    position: 'right'
-                }).showToast();
-
-                localStorage.removeItem('showToastOnReload');
-            }
+        $(document).ready(function () {
+            $('#mySelect').select2();
         });
-
     </script>
+
 </body>
 
 </html>

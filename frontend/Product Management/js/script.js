@@ -12,6 +12,11 @@ const loadData = (url) => {
             headers: headers,
             type: 'GET',
             dataSrc: '',
+            error: function (error) {
+                if (error.status === 401) {
+                    location.href = 'login.html'
+                }
+            }
         },
         order: [[0, 'desc']],
         columns: [
@@ -20,15 +25,13 @@ const loadData = (url) => {
             {
                 title: 'Actions',
                 render: function (data, type, row) {
-                    return `
-                        <button class="btn btn-warning btn-sm" onclick="editParty(${row.partyId})">
-                            <i class="bi bi-pencil-fill"></i> Edit
-                        </button>
-                        <button class="btn btn-danger btn-sm ms-2" onclick="deleteParty(${row.partyId}, '${row.partyName}')">
-                            <i class="bi bi-trash-fill"></i> Delete
-                        </button>
-                    `;
-                }
+                    return `<button class="btn btn-warning btn-sm" onclick="editParty(${row.partyId})">
+                                <i class="bi bi-pencil-fill"></i> Edit
+                            </button>
+                            <button class="btn btn-danger btn-sm ms-2" onclick="deleteParty(${row.partyId}, '${row.partyName}')">
+                                <i class="bi bi-trash-fill"></i> Delete
+                            </button>`;
+                    }
             }
         ]
     });
@@ -122,14 +125,17 @@ $(document).ready(function () {
             success: function (data) {
                 if (requestType === 'PUT') {
                     location.href = 'index.html';
-                    localStorage.setItem('ToastMessage','Party edited successfully');
+                    localStorage.setItem('ToastMessage', 'Party edited successfully');
                 } else {
                     location.href = 'index.html';
-                    localStorage.setItem('ToastMessage','Party added successfully');
+                    localStorage.setItem('ToastMessage', 'Party added successfully');
                 }
             },
-
             error: function (error) {
+                if (error.status === 401) {
+                    location.href = 'login.html';
+                    return
+                }
                 showToast('Party already exists', { backgroundColor: 'red' });
             }
         });
@@ -149,4 +155,4 @@ function showToast(message, options = {}) {
         stopOnFocus: options.stopOnFocus || true,
         progressBar: options.progressBar || true
     }).showToast();
-  }
+}

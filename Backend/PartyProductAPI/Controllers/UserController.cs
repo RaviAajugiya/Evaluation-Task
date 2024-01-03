@@ -42,7 +42,7 @@ namespace PartyProductAPI.Controllers
                 {
                     new Claim(ClaimTypes.Name, existingUser.Username),
                 }),
-                Expires = DateTime.UtcNow.AddHours(50),
+                Expires = DateTime.UtcNow.AddSeconds(5),
                 SigningCredentials = new SigningCredentials(new SymmetricSecurityKey(key), SecurityAlgorithms.HmacSha256Signature)
             };
 

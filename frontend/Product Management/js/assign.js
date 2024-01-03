@@ -12,7 +12,12 @@ const loadData = (url) => {
             url: url,
             headers: headers,
             dataSrc: '',
-            type: 'GET'
+            type: 'GET',
+            error: function (error) {
+                if (error.status === 401) {
+                    location.href = 'login.html'
+                }
+            }
         },
         order: [[0, 'desc']],
         columns: [
@@ -152,6 +157,10 @@ $(document).ready(function () {
                 }
             },
             error: function (error) {
+                if (error.status === 401) {
+                    location.href = 'login.html';
+                    return
+                }
                 showToast('Party already Assigned', { backgroundColor: 'red' });
             }
         });

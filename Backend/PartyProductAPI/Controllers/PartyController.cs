@@ -7,7 +7,7 @@ using PartyProductAPI.DTOs;
 
 namespace PartyProductAPI.Controllers
 {
-    //[Authorize]   
+    [Authorize]
     [Route("api/[controller]")]
     [ApiController]
     public class PartyController : ControllerBase

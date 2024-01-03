@@ -1,0 +1,89 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Invoice Template</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+        }
+
+        h2 {
+            color: #333;
+        }
+
+        p {
+            margin: 5px 0;
+        }
+
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+            .table th, .table td {
+                border: 1px solid #ddd;
+                padding: 8px;
+                text-align: left;
+            }
+
+            .table th {
+                background-color: #f2f2f2;
+            }
+
+        .font-weight-bold {
+            font-weight: bold;
+            margin-top: 10px;
+        }
+
+        /* Add some additional styling for better readability and aesthetics */
+        .container {
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            padding: 20px;
+        }
+
+        h2 {
+            border-bottom: 2px solid #333;
+            padding-bottom: 10px;
+        }
+
+        .table th, .table td {
+            text-align: center;
+        }
+
+        /* You can customize the colors to match your design */
+
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h2>Invoice {InvoiceId}</h2>
+        <p>Party ID: {PartyId}</p>
+        <p>Party Name: {PartyName}</p>
+        <p>Date: {Date}</p>
+
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Product ID</th>
+                    <th>Product Name</th>
+                    <th>Quantity</th>
+                    <th>Rate</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {Products}
+            </tbody>
+        </table>
+
+        <p class="font-weight-bold">Grand Total: {GrandTotal}</p>
+    </div>
+</body>
+</html>

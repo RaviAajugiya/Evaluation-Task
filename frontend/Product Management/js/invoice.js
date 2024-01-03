@@ -61,9 +61,11 @@ $(document).ready(function () {
                 return JSON.stringify(filter);
             },
             contentType: 'application/json',
-            error: function (xhr, error, thrown) {
-                console.log('AJAX Error:', xhr, error, thrown);
-                console.log(filter);
+            error: function (error) {
+                if (error.status === 401) {
+                    location.href = 'login.html';
+                    return
+                }
             }
         },
 

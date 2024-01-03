@@ -13,6 +13,11 @@ const loadData = (url) => {
             headers: headers,
             type: 'GET',
             dataSrc: '',
+            error: function (error) {
+                if (error.status === 401) {
+                    location.href = 'login.html'
+                }
+            }
         },
         order: [[0, 'desc']],
         columns: [
